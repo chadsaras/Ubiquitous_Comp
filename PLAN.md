@@ -78,6 +78,8 @@ PLAN.md
 
 **6. Split users into train / validation / test.** — **Done, via the official 5-fold split** (`load_folds`) rather than a hand-rolled one — better than originally planned, since it's the standard, citable split for this dataset. Pick one fold's test users as your held-out set and don't touch them until final evaluation; use the remaining folds for train/validation.
 
+*Bug found and fixed (commit `4a71129`):* each fold ships as 4 files split by phone platform (`fold_i_{train,test}_{android,iphone}_uuids.txt`), and `load_folds()` originally only read the first glob match per split — silently dropping the iPhone half of every fold (~45% of users). Fixed to concatenate both platform files per split; verified against the real downloaded data that every fold now shows `train=48, test=12, union=60`, zero train/test overlap, and zero duplicates.
+
 **7. Window the streams.** — **Adapted to the dataset's real structure**: instead of arbitrary fixed windows over a continuous stream, `iter_minutes()` yields one labeled minute at a time (its ~20s burst at 25 Hz), which is what ExtraSensory actually provides. This is the unit Phase 2 trains on. (See "Current status" above for why, and note it in the report as a deliberate call.)
 
 ---
