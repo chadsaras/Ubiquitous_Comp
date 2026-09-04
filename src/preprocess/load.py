@@ -178,17 +178,21 @@ def iter_minutes(uuid: str, data_dir: str | Path = "data",
 def load_folds(data_dir: str | Path = "data") -> list[dict[str, list[str]]]:
     """
     The official 5-fold user partition. Returns [{'train': [...uuids], 'test': [...]}, ...].
-    Adjust the filename patterns if the unpacked folder differs.
+
+    Each fold ships as FOUR files, split by phone platform
+    (fold_i_train_android_uuids.txt, fold_i_train_iphone_uuids.txt, and the
+    'test' equivalents) -- both platform files must be concatenated per
+    split, or roughly half the users (the iphone ones) are silently dropped.
     """
     d = Path(data_dir) / "raw" / "cv5Folds"
     folds = []
     for i in range(5):
-        tr = list(d.rglob(f"*fold_{i}*train*uuids*"))
-        te = list(d.rglob(f"*fold_{i}*test*uuids*"))
-        if not tr or not te:
+        tr_files = sorted(d.rglob(f"fold_{i}_train_*_uuids*"))
+        te_files = sorted(d.rglob(f"fold_{i}_test_*_uuids*"))
+        if not tr_files or not te_files:
             raise FileNotFoundError(f"fold {i}: pattern miss under {d}; inspect the folder")
         folds.append({
-            "train": tr[0].read_text().split(),
-            "test": te[0].read_text().split(),
+            "train": [u for f in tr_files for u in f.read_text().split()],
+            "test": [u for f in te_files for u in f.read_text().split()],
         })
     return folds
