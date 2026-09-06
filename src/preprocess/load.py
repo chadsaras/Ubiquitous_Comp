@@ -24,6 +24,8 @@ import pandas as pd
 TARGET_HZ = 25.0
 NATIVE_HZ = 40.0  # phone acc/gyro in ExtraSensory
 MAX_BURST_SEC = 60.0  # bursts are ~20 s; anything longer is a clock glitch
+G = 9.80665
+MS2_THRESHOLD = 4.0   # median |acc| above this means the phone reports m/s^2, not g
 
 # The seven challenge classes, in a fixed order used everywhere downstream.
 CLASSES = [
@@ -150,6 +152,18 @@ def resample(burst: np.ndarray, hz: float = TARGET_HZ) -> np.ndarray:
     return np.column_stack([np.interp(grid, t, burst[:, k]) for k in (1, 2, 3)])
 
 
+def to_g(acc: np.ndarray) -> np.ndarray:
+    """
+    Normalise accelerometer units to g. iPhones in ExtraSensory report in g (gravity ~1.0),
+    Android phones in m/s^2 (gravity ~9.8). Decided per burst from the median magnitude so it
+    also works on an unseen evaluation recording. acc: (n, 3).
+    """
+    if len(acc) == 0:
+        return acc
+    med = float(np.median(np.linalg.norm(acc, axis=1)))
+    return acc / G if med > MS2_THRESHOLD else acc
+
+
 @dataclass
 class Minute:
     """One labelled minute with both modalities at TARGET_HZ, or None where missing."""
@@ -194,6 +208,8 @@ def iter_minutes(uuid: str, data_dir: str | Path = "data",
 
     for ts, row in labels.iterrows():
         acc = burst_for(acc_idx, ts)
+        if acc is not None:
+            acc = to_g(acc)
         gyr = burst_for(gyr_idx, ts)
         if require_both and (acc is None or gyr is None):
             continue
@@ -202,18 +218,21 @@ def iter_minutes(uuid: str, data_dir: str | Path = "data",
 
 def load_folds(data_dir: str | Path = "data") -> list[dict[str, list[str]]]:
     """
-    The official 5-fold user partition. Returns [{'train': [...uuids], 'test': [...]}, ...].
-    Adjust the filename patterns if the unpacked folder differs.
+    The official 5-fold user-level partition. Returns [{'train': [...uuids], 'test': [...]}, ...].
+    Each fold ships as separate *_android_uuids.txt and *_iphone_uuids.txt files; both halves
+    are concatenated (12 test / 48 train users per fold).
     """
     d = Path(data_dir) / "raw" / "cv5Folds"
     folds = []
     for i in range(5):
-        tr = list(d.rglob(f"*fold_{i}*train*uuids*"))
-        te = list(d.rglob(f"*fold_{i}*test*uuids*"))
-        if not tr or not te:
-            raise FileNotFoundError(f"fold {i}: pattern miss under {d}; inspect the folder")
-        folds.append({
-            "train": tr[0].read_text().split(),
-            "test": te[0].read_text().split(),
-        })
+        parts = {}
+        for split in ("train", "test"):
+            files = sorted(d.rglob(f"fold_{i}_{split}_*uuids.txt"))
+            if not files:
+                raise FileNotFoundError(f"fold {i} {split}: no files under {d}")
+            uuids: list[str] = []
+            for f in files:
+                uuids += f.read_text().split()
+            parts[split] = uuids
+        folds.append(parts)
     return folds
