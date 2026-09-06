@@ -1,0 +1,35 @@
+{
+ "t0_unix": 1444145209,
+ "intervals": [
+  {
+   "activity": "standing_and_moving",
+   "start": 0.0,
+   "end": 240.0
+  },
+  {
+   "activity": "walking",
+   "start": 240.0,
+   "end": 1347.0
+  },
+  {
+   "activity": "standing_and_moving",
+   "start": 1347.0,
+   "end": 1707.0
+  },
+  {
+   "activity": "sitting",
+   "start": 1707.0,
+   "end": 8007.0
+  },
+  {
+   "activity": "walking",
+   "start": 8127.0,
+   "end": 9267.0
+  },
+  {
+   "activity": "sitting",
+   "start": 9267.0,
+   "end": 9687.0
+  }
+ ]
+}

@@ -1,0 +1,138 @@
+571616 windows, 57 users; subset=all (175 feats), level=window, clean=False
+label/signal-inconsistent active samples: 52477 of 161097 active (32.6%)
+
+=== fold 0: train 457158 / test 114458 samples, 12 test users, 123s ===
+
+all test minutes: n=20394  acc=0.453  macroF1=0.377  balAcc=0.368
+  class                  prec    rec     f1       n
+  lying_down            0.524  0.298  0.380    4102
+  sitting               0.354  0.765  0.484    4792
+  standing_in_place     0.280  0.029  0.053    2068
+  standing_and_moving   0.211  0.113  0.147    3271
+  walking               0.675  0.650  0.662    5691
+  running               0.938  0.122  0.216     123
+  bicycling             0.825  0.599  0.694     347
+
+signal-consistent test minutes: n=17669  acc=0.476  macroF1=0.421  balAcc=0.439
+  class                  prec    rec     f1       n
+  lying_down            0.584  0.298  0.395    4102
+  sitting               0.399  0.765  0.524    4792
+  standing_in_place     0.381  0.029  0.055    2068
+  standing_and_moving   0.274  0.113  0.160    3271
+  walking               0.620  0.932  0.745    3077
+  running               0.938  0.146  0.252     103
+  bicycling             0.839  0.793  0.815     256
+
+=== fold 1: train 449535 / test 122081 samples, 12 test users, 121s ===
+
+all test minutes: n=20424  acc=0.418  macroF1=0.364  balAcc=0.372
+  class                  prec    rec     f1       n
+  lying_down            0.585  0.200  0.298    4633
+  sitting               0.337  0.777  0.470    4800
+  standing_in_place     0.166  0.027  0.046    1390
+  standing_and_moving   0.282  0.098  0.145    3946
+  walking               0.521  0.617  0.565    4532
+  running               0.375  0.278  0.319      54
+  bicycling             0.853  0.606  0.709    1069
+
+signal-consistent test minutes: n=17885  acc=0.440  macroF1=0.400  balAcc=0.449
+  class                  prec    rec     f1       n
+  lying_down            0.616  0.200  0.302    4633
+  sitting               0.385  0.777  0.515    4800
+  standing_in_place     0.202  0.027  0.047    1390
+  standing_and_moving   0.352  0.098  0.153    3946
+  walking               0.463  0.942  0.621    2274
+  running               0.385  0.294  0.333      51
+  bicycling             0.853  0.807  0.829     791
+
+=== fold 2: train 445826 / test 125790 samples, 11 test users, 119s ===
+
+all test minutes: n=20008  acc=0.493  macroF1=0.418  balAcc=0.401
+  class                  prec    rec     f1       n
+  lying_down            0.591  0.374  0.458    3814
+  sitting               0.374  0.772  0.504    4399
+  standing_in_place     0.208  0.051  0.082    1395
+  standing_and_moving   0.350  0.177  0.235    3195
+  walking               0.598  0.653  0.624    4761
+  running               0.658  0.171  0.272     449
+  bicycling             0.982  0.607  0.750    1995
+
+signal-consistent test minutes: n=16997  acc=0.538  macroF1=0.491  balAcc=0.499
+  class                  prec    rec     f1       n
+  lying_down            0.626  0.374  0.468    3814
+  sitting               0.448  0.772  0.567    4399
+  standing_in_place     0.302  0.051  0.087    1395
+  standing_and_moving   0.465  0.177  0.256    3195
+  walking               0.551  0.949  0.698    2536
+  running               0.733  0.335  0.460     230
+  bicycling             0.982  0.837  0.904    1428
+
+=== fold 3: train 451632 / test 119984 samples, 12 test users, 122s ===
+
+all test minutes: n=20242  acc=0.398  macroF1=0.306  balAcc=0.313
+  class                  prec    rec     f1       n
+  lying_down            0.481  0.189  0.272    4790
+  sitting               0.334  0.766  0.465    4545
+  standing_in_place     0.132  0.043  0.065    1133
+  standing_and_moving   0.328  0.167  0.221    4224
+  walking               0.505  0.599  0.548    4153
+  running               1.000  0.003  0.005     395
+  bicycling             0.879  0.421  0.570    1002
+
+signal-consistent test minutes: n=17674  acc=0.426  macroF1=0.345  balAcc=0.381
+  class                  prec    rec     f1       n
+  lying_down            0.558  0.189  0.283    4790
+  sitting               0.379  0.766  0.507    4545
+  standing_in_place     0.182  0.043  0.070    1133
+  standing_and_moving   0.392  0.167  0.234    4224
+  walking               0.455  0.917  0.608    2144
+  running               1.000  0.009  0.018     112
+  bicycling             0.880  0.577  0.697     726
+
+=== fold 4: train 482313 / test 89303 samples, 10 test users, 129s ===
+
+all test minutes: n=14541  acc=0.406  macroF1=0.351  balAcc=0.391
+  class                  prec    rec     f1       n
+  lying_down            0.537  0.133  0.213    3516
+  sitting               0.366  0.750  0.492    4000
+  standing_in_place     0.118  0.005  0.010    1923
+  standing_and_moving   0.220  0.169  0.192    2437
+  walking               0.538  0.749  0.626    2280
+  running               1.000  0.018  0.034      57
+  bicycling             0.862  0.915  0.888     328
+
+signal-consistent test minutes: n=13592  acc=0.408  macroF1=0.373  balAcc=0.438
+  class                  prec    rec     f1       n
+  lying_down            0.565  0.133  0.215    3516
+  sitting               0.387  0.750  0.510    4000
+  standing_in_place     0.130  0.005  0.010    1923
+  standing_and_moving   0.233  0.169  0.196    2437
+  walking               0.485  0.974  0.647    1401
+  running               1.000  0.062  0.118      16
+  bicycling             0.866  0.973  0.917     299
+
+POOLED, all test minutes (headline): n=95609  acc=0.435  macroF1=0.363  balAcc=0.358
+  class                  prec    rec     f1       n
+  lying_down            0.545  0.237  0.331   20855
+  sitting               0.352  0.767  0.482   22536
+  standing_in_place     0.184  0.029  0.050    7909
+  standing_and_moving   0.278  0.143  0.189   17073
+  walking               0.571  0.644  0.606   21417
+  running               0.623  0.101  0.174    1078
+  bicycling             0.908  0.588  0.714    4741
+
+POOLED, signal-consistent test minutes: n=83817  acc=0.459  macroF1=0.421  balAcc=0.445
+  class                  prec    rec     f1       n
+  lying_down            0.594  0.237  0.339   20855
+  sitting               0.398  0.767  0.524   22536
+  standing_in_place     0.247  0.029  0.052    7909
+  standing_and_moving   0.337  0.143  0.201   17073
+  walking               0.518  0.940  0.668   11432
+  running               0.673  0.213  0.323     512
+  bicycling             0.910  0.785  0.842    3500
+saved results/confusion_matrix.png
+saved results/confusion_matrix_consistent.png
+
+training final model on all users ...
+saved results/model_rf.joblib  (825.8 MB on disk, 20417900 tree nodes)
+top features: ['acc_x__mean', 'acc_x__median', 'acc_y__mean', 'acc_y__median', 'acc_x__rms', 'acc_x__min', 'acc_x__max', 'acc_y__rms', 'acc_y__max', 'acc_y__min']

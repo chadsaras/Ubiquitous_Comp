@@ -1,0 +1,45 @@
+{
+ "t0_unix": 1438735827,
+ "intervals": [
+  {
+   "activity": "lying_down",
+   "start": 0.0,
+   "end": 120.0
+  },
+  {
+   "activity": "walking",
+   "start": 120.0,
+   "end": 180.0
+  },
+  {
+   "activity": "sitting",
+   "start": 180.0,
+   "end": 720.0
+  },
+  {
+   "activity": "standing_in_place",
+   "start": 720.0,
+   "end": 1260.0
+  },
+  {
+   "activity": "running",
+   "start": 1260.0,
+   "end": 3240.0
+  },
+  {
+   "activity": "sitting",
+   "start": 3240.0,
+   "end": 5943.0
+  },
+  {
+   "activity": "sitting",
+   "start": 14081.0,
+   "end": 14262.0
+  },
+  {
+   "activity": "lying_down",
+   "start": 14262.0,
+   "end": 14742.0
+  }
+ ]
+}

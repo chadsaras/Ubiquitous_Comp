@@ -1,0 +1,180 @@
+{
+ "intervals": [
+  {
+   "activity": "walking",
+   "start": 0.0,
+   "end": 331.24,
+   "confidence": 0.31912394313085,
+   "n_windows": 46,
+   "observed_sec": 117.5,
+   "runner_up": "sitting",
+   "runner_up_prob": 0.2709849992579847,
+   "summary": {
+    "acc_mag_mean": 1.0269,
+    "acc_mag_std": 0.1361,
+    "acc_mag_range": 0.7806,
+    "acc_dom_freq_hz": 3.1739,
+    "acc_band_0.5_3hz": 0.3967,
+    "gyro_mag_mean": 0.7232,
+    "gyro_mag_std": 0.4732,
+    "gyro_dom_freq_hz": 1.3478
+   }
+  },
+  {
+   "activity": "sitting",
+   "start": 331.24,
+   "end": 849.92,
+   "confidence": 0.38037287435440914,
+   "n_windows": 80,
+   "observed_sec": 202.5,
+   "runner_up": "walking",
+   "runner_up_prob": 0.2580110197530645,
+   "summary": {
+    "acc_mag_mean": 1.0127,
+    "acc_mag_std": 0.0629,
+    "acc_mag_range": 0.3678,
+    "acc_dom_freq_hz": 3.2875,
+    "acc_band_0.5_3hz": 0.3575,
+    "gyro_mag_mean": 0.3277,
+    "gyro_mag_std": 0.2239,
+    "gyro_dom_freq_hz": 1.0175
+   }
+  },
+  {
+   "activity": "walking",
+   "start": 849.92,
+   "end": 1269.92,
+   "confidence": 0.29789232764500584,
+   "n_windows": 63,
+   "observed_sec": 160.0,
+   "runner_up": "standing_and_moving",
+   "runner_up_prob": 0.2213188658106451,
+   "summary": {
+    "acc_mag_mean": 1.0138,
+    "acc_mag_std": 0.0815,
+    "acc_mag_range": 0.6507,
+    "acc_dom_freq_hz": 3.3429,
+    "acc_band_0.5_3hz": 0.3156,
+    "gyro_mag_mean": 0.6169,
+    "gyro_mag_std": 0.6914,
+    "gyro_dom_freq_hz": 0.4508
+   }
+  },
+  {
+   "activity": "running",
+   "start": 1269.92,
+   "end": 2949.92,
+   "confidence": 0.8937437232471109,
+   "n_windows": 251,
+   "observed_sec": 630.0,
+   "runner_up": "walking",
+   "runner_up_prob": 0.0798198573897569,
+   "summary": {
+    "acc_mag_mean": 1.939,
+    "acc_mag_std": 1.2015,
+    "acc_mag_range": 4.9714,
+    "acc_dom_freq_hz": 2.8088,
+    "acc_band_0.5_3hz": 0.4176,
+    "gyro_mag_mean": 3.7275,
+    "gyro_mag_std": 2.0795,
+    "gyro_dom_freq_hz": 2.5458
+   }
+  },
+  {
+   "activity": "walking",
+   "start": 2949.92,
+   "end": 3249.92,
+   "confidence": 0.6937812284329072,
+   "n_windows": 45,
+   "observed_sec": 115.0,
+   "runner_up": "running",
+   "runner_up_prob": 0.11836526026521946,
+   "summary": {
+    "acc_mag_mean": 1.0549,
+    "acc_mag_std": 0.2688,
+    "acc_mag_range": 1.3832,
+    "acc_dom_freq_hz": 1.8844,
+    "acc_band_0.5_3hz": 0.7702,
+    "gyro_mag_mean": 1.5317,
+    "gyro_mag_std": 0.958,
+    "gyro_dom_freq_hz": 0.8578
+   }
+  },
+  {
+   "activity": "lying_down",
+   "start": 3249.92,
+   "end": 5806.12,
+   "confidence": 0.5328809067722023,
+   "n_windows": 373,
+   "observed_sec": 935.0,
+   "runner_up": "sitting",
+   "runner_up_prob": 0.2885738169116691,
+   "summary": {
+    "acc_mag_mean": 1.0014,
+    "acc_mag_std": 0.002,
+    "acc_mag_range": 0.0109,
+    "acc_dom_freq_hz": 4.2686,
+    "acc_band_0.5_3hz": 0.2218,
+    "gyro_mag_mean": 0.0021,
+    "gyro_mag_std": 0.0009,
+    "gyro_dom_freq_hz": 6.3823
+   }
+  },
+  {
+   "activity": "sitting",
+   "start": 5806.12,
+   "end": 5960.359999999984,
+   "confidence": 0.4641421609360926,
+   "n_windows": 17,
+   "observed_sec": 45.0,
+   "runner_up": "standing_and_moving",
+   "runner_up_prob": 0.26364264100530277,
+   "summary": {
+    "acc_mag_mean": 1.0117,
+    "acc_mag_std": 0.0179,
+    "acc_mag_range": 0.1731,
+    "acc_dom_freq_hz": 4.5529,
+    "acc_band_0.5_3hz": 0.2184,
+    "gyro_mag_mean": 0.0394,
+    "gyro_mag_std": 0.1198,
+    "gyro_dom_freq_hz": 5.5294
+   }
+  },
+  {
+   "activity": "sitting",
+   "start": 14081.0,
+   "end": 14742.0,
+   "confidence": 0.3068955194830374,
+   "n_windows": 96,
+   "observed_sec": 245.0,
+   "runner_up": "standing_and_moving",
+   "runner_up_prob": 0.24608659783036022,
+   "summary": {
+    "acc_mag_mean": 1.0024,
+    "acc_mag_std": 0.0421,
+    "acc_mag_range": 0.2958,
+    "acc_dom_freq_hz": 4.0071,
+    "acc_band_0.5_3hz": 0.2294,
+    "gyro_mag_mean": 0.3895,
+    "gyro_mag_std": 0.3972,
+    "gyro_dom_freq_hz": 0.4357
+   }
+  }
+ ],
+ "recording_sec": 14742.0,
+ "hz": 25.0,
+ "time_base": "seconds from start",
+ "meta": {
+  "bursty": true,
+  "burst_period_sec": 60.0,
+  "n_windows": 971,
+  "n_samples": 88000,
+  "model": "results/model_rf.joblib",
+  "feature_subset": "noori",
+  "context_windows": 7,
+  "min_episode_sec": 90.0,
+  "whole_burst_aggregation": true,
+  "window_sec": 5.0,
+  "hop_sec": 2.48
+ }
+}

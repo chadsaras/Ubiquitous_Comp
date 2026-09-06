@@ -1,0 +1,200 @@
+{
+ "intervals": [
+  {
+   "activity": "standing_and_moving",
+   "start": 0.0,
+   "end": 248.68,
+   "confidence": 0.29948727688268945,
+   "n_windows": 32,
+   "observed_sec": 82.5,
+   "runner_up": "sitting",
+   "runner_up_prob": 0.2820176107464748,
+   "summary": {
+    "acc_mag_mean": 1.0063,
+    "acc_mag_std": 0.0272,
+    "acc_mag_range": 0.1709,
+    "acc_dom_freq_hz": 2.95,
+    "acc_band_0.5_3hz": 0.3934,
+    "gyro_mag_mean": 0.079,
+    "gyro_mag_std": 0.0484,
+    "gyro_dom_freq_hz": 0.6438
+   }
+  },
+  {
+   "activity": "walking",
+   "start": 248.68,
+   "end": 406.12,
+   "confidence": 0.3540342210783211,
+   "n_windows": 23,
+   "observed_sec": 60.0,
+   "runner_up": "sitting",
+   "runner_up_prob": 0.24387495563263337,
+   "summary": {
+    "acc_mag_mean": 1.0061,
+    "acc_mag_std": 0.0414,
+    "acc_mag_range": 0.2924,
+    "acc_dom_freq_hz": 3.5826,
+    "acc_band_0.5_3hz": 0.3808,
+    "gyro_mag_mean": 0.1553,
+    "gyro_mag_std": 0.1152,
+    "gyro_dom_freq_hz": 0.687
+   }
+  },
+  {
+   "activity": "sitting",
+   "start": 406.12,
+   "end": 608.68,
+   "confidence": 0.3694649946230436,
+   "n_windows": 25,
+   "observed_sec": 65.0,
+   "runner_up": "walking",
+   "runner_up_prob": 0.23080824945038983,
+   "summary": {
+    "acc_mag_mean": 1.0059,
+    "acc_mag_std": 0.0322,
+    "acc_mag_range": 0.2745,
+    "acc_dom_freq_hz": 4.896,
+    "acc_band_0.5_3hz": 0.194,
+    "gyro_mag_mean": 0.1897,
+    "gyro_mag_std": 0.2563,
+    "gyro_dom_freq_hz": 0.408
+   }
+  },
+  {
+   "activity": "walking",
+   "start": 608.68,
+   "end": 1186.12,
+   "confidence": 0.6343796209181143,
+   "n_windows": 79,
+   "observed_sec": 200.0,
+   "runner_up": "standing_in_place",
+   "runner_up_prob": 0.11306223543693793,
+   "summary": {
+    "acc_mag_mean": 1.0098,
+    "acc_mag_std": 0.1923,
+    "acc_mag_range": 0.8603,
+    "acc_dom_freq_hz": 2.0076,
+    "acc_band_0.5_3hz": 0.6962,
+    "gyro_mag_mean": 0.6852,
+    "gyro_mag_std": 0.4388,
+    "gyro_dom_freq_hz": 0.9468
+   }
+  },
+  {
+   "activity": "sitting",
+   "start": 1186.12,
+   "end": 1306.12,
+   "confidence": 0.2766589446790876,
+   "n_windows": 16,
+   "observed_sec": 42.5,
+   "runner_up": "standing_and_moving",
+   "runner_up_prob": 0.24010871653677382,
+   "summary": {
+    "acc_mag_mean": 1.005,
+    "acc_mag_std": 0.0156,
+    "acc_mag_range": 0.1208,
+    "acc_dom_freq_hz": 3.9,
+    "acc_band_0.5_3hz": 0.2764,
+    "gyro_mag_mean": 0.1125,
+    "gyro_mag_std": 0.1323,
+    "gyro_dom_freq_hz": 0.4625
+   }
+  },
+  {
+   "activity": "walking",
+   "start": 1306.12,
+   "end": 1693.12,
+   "confidence": 0.6238794389987324,
+   "n_windows": 56,
+   "observed_sec": 142.5,
+   "runner_up": "standing_and_moving",
+   "runner_up_prob": 0.18596274046515365,
+   "summary": {
+    "acc_mag_mean": 1.0266,
+    "acc_mag_std": 0.2456,
+    "acc_mag_range": 1.1738,
+    "acc_dom_freq_hz": 2.0321,
+    "acc_band_0.5_3hz": 0.6955,
+    "gyro_mag_mean": 0.978,
+    "gyro_mag_std": 0.5571,
+    "gyro_dom_freq_hz": 1.2679
+   }
+  },
+  {
+   "activity": "sitting",
+   "start": 1693.12,
+   "end": 8024.359999999984,
+   "confidence": 0.5430942751641603,
+   "n_windows": 841,
+   "observed_sec": 2105.0,
+   "runner_up": "lying_down",
+   "runner_up_prob": 0.1926215972835743,
+   "summary": {
+    "acc_mag_mean": 0.9967,
+    "acc_mag_std": 0.0027,
+    "acc_mag_range": 0.0196,
+    "acc_dom_freq_hz": 2.1253,
+    "acc_band_0.5_3hz": 0.2942,
+    "gyro_mag_mean": 0.0169,
+    "gyro_mag_std": 0.0166,
+    "gyro_dom_freq_hz": 5.1455
+   }
+  },
+  {
+   "activity": "walking",
+   "start": 8127.0,
+   "end": 9373.12,
+   "confidence": 0.6035683827822428,
+   "n_windows": 167,
+   "observed_sec": 420.0,
+   "runner_up": "standing_and_moving",
+   "runner_up_prob": 0.12094065399580456,
+   "summary": {
+    "acc_mag_mean": 1.0213,
+    "acc_mag_std": 0.1646,
+    "acc_mag_range": 0.7786,
+    "acc_dom_freq_hz": 2.2635,
+    "acc_band_0.5_3hz": 0.5875,
+    "gyro_mag_mean": 0.7572,
+    "gyro_mag_std": 0.507,
+    "gyro_dom_freq_hz": 1.0144
+   }
+  },
+  {
+   "activity": "sitting",
+   "start": 9373.12,
+   "end": 9687.0,
+   "confidence": 0.4871950856015244,
+   "n_windows": 41,
+   "observed_sec": 105.0,
+   "runner_up": "standing_and_moving",
+   "runner_up_prob": 0.1981698422285261,
+   "summary": {
+    "acc_mag_mean": 1.0065,
+    "acc_mag_std": 0.0232,
+    "acc_mag_range": 0.2257,
+    "acc_dom_freq_hz": 8.4341,
+    "acc_band_0.5_3hz": 0.1593,
+    "gyro_mag_mean": 0.1425,
+    "gyro_mag_std": 0.1854,
+    "gyro_dom_freq_hz": 1.7268
+   }
+  }
+ ],
+ "recording_sec": 9687.0,
+ "hz": 25.0,
+ "time_base": "seconds from start",
+ "meta": {
+  "bursty": true,
+  "burst_period_sec": 60.0,
+  "n_windows": 1280,
+  "n_samples": 128000,
+  "model": "results/model_rf.joblib",
+  "feature_subset": "noori",
+  "context_windows": 7,
+  "min_episode_sec": 90.0,
+  "whole_burst_aggregation": true,
+  "window_sec": 5.0,
+  "hop_sec": 2.48
+ }
+}
