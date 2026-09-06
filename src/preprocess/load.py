@@ -23,6 +23,7 @@ import pandas as pd
 
 TARGET_HZ = 25.0
 NATIVE_HZ = 40.0  # phone acc/gyro in ExtraSensory
+MAX_BURST_SEC = 60.0  # bursts are ~20 s; anything longer is a clock glitch
 
 # The seven challenge classes, in a fixed order used everywhere downstream.
 CLASSES = [
@@ -111,14 +112,26 @@ def read_burst(path: Path) -> np.ndarray | None:
     or None if the file is a 'nan' dummy / unreadable.
     """
     try:
-        arr = np.loadtxt(path)
+        # pandas' C parser is ~10x faster than np.loadtxt on these 80 KB text files
+        arr = pd.read_csv(path, sep=r"\s+", header=None, engine="c",
+                          dtype=np.float64, na_filter=False).to_numpy()
     except Exception:
-        return None
+        try:
+            arr = np.loadtxt(path)
+        except Exception:
+            return None
     if arr.ndim != 2 or arr.shape[0] < 10:
         return None
     if arr.shape[1] == 4:
         t = arr[:, 0] - arr[0, 0]
         xyz = arr[:, 1:4]
+        # In-the-wild timestamp glitches: non-monotonic steps or an absurd span.
+        # Fall back to the nominal sampling grid rather than trusting a broken clock,
+        # otherwise resample() would try to build a grid with billions of points.
+        dt = np.diff(t)
+        if (not np.all(np.isfinite(t)) or t[-1] <= 0 or t[-1] > MAX_BURST_SEC
+                or np.any(dt <= 0)):
+            t = np.arange(arr.shape[0]) / NATIVE_HZ
     elif arr.shape[1] == 3:  # no timestamp column: assume native rate
         t = np.arange(arr.shape[0]) / NATIVE_HZ
         xyz = arr
@@ -132,7 +145,8 @@ def read_burst(path: Path) -> np.ndarray | None:
 def resample(burst: np.ndarray, hz: float = TARGET_HZ) -> np.ndarray:
     """Linear-interpolate an [t,x,y,z] burst onto a uniform grid at `hz`. Returns (m, 3)."""
     t = burst[:, 0]
-    grid = np.arange(0.0, t[-1], 1.0 / hz)
+    end = min(float(t[-1]), MAX_BURST_SEC)          # hard cap: never build a giant grid
+    grid = np.arange(0.0, end, 1.0 / hz)
     return np.column_stack([np.interp(grid, t, burst[:, k]) for k in (1, 2, 3)])
 
 
@@ -158,18 +172,29 @@ def iter_minutes(uuid: str, data_dir: str | Path = "data",
     acc_dir = next(iter((root / "raw_acc").rglob(uuid)), None)
     gyr_dir = next(iter((root / "raw_gyro").rglob(uuid)), None)
 
-    def burst_for(d: Path | None, ts: int) -> np.ndarray | None:
+    def index(d: Path | None) -> dict[int, Path]:
+        """One directory scan -> {minute_timestamp: file}. Avoids a glob per minute."""
         if d is None:
+            return {}
+        out: dict[int, Path] = {}
+        for p in d.iterdir():
+            head = p.name.split(".")[0]
+            if head.isdigit():
+                out[int(head)] = p
+        return out
+
+    acc_idx, gyr_idx = index(acc_dir), index(gyr_dir)
+
+    def burst_for(idx: dict[int, Path], ts: int) -> np.ndarray | None:
+        p = idx.get(ts)
+        if p is None:
             return None
-        hits = list(d.glob(f"{ts}*"))
-        if not hits:
-            return None
-        b = read_burst(hits[0])
+        b = read_burst(p)
         return resample(b) if b is not None else None
 
     for ts, row in labels.iterrows():
-        acc = burst_for(acc_dir, ts)
-        gyr = burst_for(gyr_dir, ts)
+        acc = burst_for(acc_idx, ts)
+        gyr = burst_for(gyr_idx, ts)
         if require_both and (acc is None or gyr is None):
             continue
         yield Minute(uuid, int(ts), row["label"], acc, gyr)
@@ -178,21 +203,17 @@ def iter_minutes(uuid: str, data_dir: str | Path = "data",
 def load_folds(data_dir: str | Path = "data") -> list[dict[str, list[str]]]:
     """
     The official 5-fold user partition. Returns [{'train': [...uuids], 'test': [...]}, ...].
-
-    Each fold ships as FOUR files, split by phone platform
-    (fold_i_train_android_uuids.txt, fold_i_train_iphone_uuids.txt, and the
-    'test' equivalents) -- both platform files must be concatenated per
-    split, or roughly half the users (the iphone ones) are silently dropped.
+    Adjust the filename patterns if the unpacked folder differs.
     """
     d = Path(data_dir) / "raw" / "cv5Folds"
     folds = []
     for i in range(5):
-        tr_files = sorted(d.rglob(f"fold_{i}_train_*_uuids*"))
-        te_files = sorted(d.rglob(f"fold_{i}_test_*_uuids*"))
-        if not tr_files or not te_files:
+        tr = list(d.rglob(f"*fold_{i}*train*uuids*"))
+        te = list(d.rglob(f"*fold_{i}*test*uuids*"))
+        if not tr or not te:
             raise FileNotFoundError(f"fold {i}: pattern miss under {d}; inspect the folder")
         folds.append({
-            "train": [u for f in tr_files for u in f.read_text().split()],
-            "test": [u for f in te_files for u in f.read_text().split()],
+            "train": tr[0].read_text().split(),
+            "test": te[0].read_text().split(),
         })
     return folds
