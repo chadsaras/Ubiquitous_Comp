@@ -18,6 +18,15 @@ one has more capacity":
                        cannot represent directly. This directly tests whether
                        *learned* temporal structure beats the hand-computed
                        dominant-frequency features the tree models rely on.
+
+Both Model 1 and Model 2 consistently trailed Random Forest by ~8 accuracy
+points, on every fold -- the ceiling turned out to be the harder job of
+learning useful features from raw signal at all, not which raw-signal
+architecture does it. FeatureMLP below removes that handicap: it trains on
+the SAME 302 engineered features Random Forest uses (see
+scripts/train_classifier.py's aggregate_minutes/feature_mask), so it is not
+capacity-matched to Models 1/2 -- it is meant to be a genuine competitor to
+Random Forest, not another point in a fair small-model ablation.
 """
 from __future__ import annotations
 
@@ -97,7 +106,30 @@ class CNNGRU(nn.Module):
         return self.head(pooled)
 
 
-MODELS = {"cnn": TinyCNN, "cnngru": CNNGRU}
+class FeatureMLP(nn.Module):
+    """
+    ~112k parameters -- larger than Models 1/2 on purpose (see module docstring).
+    Plain feedforward net: 302 -> 256 -> 128 -> 7, BatchNorm+ReLU+Dropout between
+    layers. Input is a (batch, n_in) vector of the same mean+std-aggregated,
+    noori-subset features Random Forest trains on, not a raw signal -- no
+    convolution or recurrence needed, the feature engineering already did the
+    representation-learning job.
+    """
+
+    def __init__(self, n_in: int = 302, n_classes: int = 7, dropout: float = 0.3):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_in, 256), nn.BatchNorm1d(256), nn.ReLU(inplace=True), nn.Dropout(dropout),
+            nn.Linear(256, 128), nn.BatchNorm1d(128), nn.ReLU(inplace=True), nn.Dropout(dropout),
+            nn.Linear(128, n_classes),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x: (batch, n_in) -> logits (batch, n_classes)."""
+        return self.net(x)
+
+
+MODELS = {"cnn": TinyCNN, "cnngru": CNNGRU, "mlp": FeatureMLP}
 
 
 def build_model(arch: str, **kwargs) -> nn.Module:
