@@ -21,7 +21,9 @@ Assign people to tracks once the third member is confirmed; all three can start 
 
 ## Current status (updated as of this commit)
 
-Phase 0 and most of Phase 1 are done, contributed by chadsaras:
+Phase 0 and Phase 1 are fully done. Phase 2 (recognition backbone) is fully done, with **two tree models and two neural models trained and evaluated end to end**, all on the identical official 5-fold split and the identical set of minutes — full results below in Phase 2. Phase 3 (aggregation/timeline) has been built by chadsaras (commit `baf2d13`). Phase 4 (question-answering interface) has been started by a teammate — a hybrid rule-based/LLM intent parser (commit `9729efb`, `src/query/`). Phases 5–8 not started.
+
+Phase 0/1, contributed by chadsaras:
 - Repo scaffold, `requirements.txt`, `.gitignore` — **done**.
 - `scripts/prepare_data.py` — downloads/unpacks ExtraSensory (labels, original labels, official 5-fold splits, raw acc/gyro) — **done** (Step 4).
 - `src/preprocess/load.py` — resamples every burst to 25 Hz, resolves the 7 challenge classes (including pulling the two standing classes from the original-labels file, since the cleaned file collapses them), resolves overlapping labels by a most-dynamic-activity-wins priority order, and loads the **official 5-fold user split** — **done** (Steps 5–6, using the official folds instead of a hand-rolled split).
@@ -86,21 +88,53 @@ PLAN.md
 
 ---
 
-## Phase 2 — Activity recognizer (Day 2 – Day 4)
+## Phase 2 — Activity recognizer (Day 2 – Day 4) — **DONE, 4 models trained and compared**
 
-**8. Engineer simple features per window** (mean, std, min/max, energy, dominant frequency via FFT, correlation between axes) for both accel and gyro. This is the classic HAR (Human Activity Recognition) recipe — cheap, well-understood, and edge-friendly.
+**8. Engineer simple features per window** — **Done** (`src/recognize/features.py`, chadsaras). 175 named time/frequency/cross-axis features over 8 signals (Acc X/Y/Z, Gyro X/Y/Z, |Acc|, |Gyro|); minute-level aggregation (mean+std of a minute's ~7 windows) and an orientation-feature-removed subset (`noori`, 302 features) both shown to help via `results/ablation.csv`. A "cleaned training set" policy (drop training-only minutes whose accelerometer never moved despite an active-class label) is applied to training but never to test, so reported numbers reflect the real, messy evaluation set.
 
-**9. Train a baseline classifier** (Random Forest or gradient boosting) on these features. This gives you a working, if imperfect, recognizer fast — matching the brief's advice to "begin with a small, correct pipeline" before optimizing.
+**9. Train a baseline classifier — Done, plus a second tree model for comparison.** Random Forest (chosen, full 5-fold) and HistGradientBoosting (2-fold quick comparison only, not yet run on all 5 folds — a real gap, see below).
 
-**10. Train a small neural net (1D-CNN or small LSTM) directly on raw windows on your GPU**, as a second, likely more accurate option. Since you have GPU access, this is cheap to try and strengthens your "design reasoning" section (you can justify picking whichever wins, with numbers).
+**10. Train small neural nets on raw windows — Done, two architectures, both matched to a ~31K parameter budget so the comparison isolates architecture, not capacity:**
+- **Model 1 — TinyCNN** (`src/recognize/nn_models.py`): 3-block 1D-CNN, global average pooling, 31,271 params. Trained on the institute server, CPU, all 5 folds.
+- **Model 2 — CNN+GRU** (same file): short conv front-end feeding a small unidirectional GRU, mean-pooled over time, 31,607 params — chosen over the plan's suggested plain LSTM for fewer parameters at comparable expressiveness. Trained on Kaggle (T4 GPU), all 5 folds, after a genuinely difficult debugging saga (see below) — the same code, same data, same official split as everything else.
 
-**11. Evaluate both on the validation set: accuracy, per-class precision/recall/F1, and the confusion matrix.** This *is* Required Figure #2 — build it now while you're already in this code, don't defer it.
+Both use the raw, fixed-length (500 timesteps × 6 channel) burst per minute as input (`src/recognize/nn_data.py`), not the 302 engineered features — the point of Step 10 was testing whether a model can learn its own useful representation directly from signal.
 
-**12. Pick the better model as your final recognizer**, and note *why* in a paragraph for the report (this feeds the 25% design-quality score directly).
+**11. Evaluate all four on the same 5-fold split — Done.** Full numbers:
+
+| Model | Pooled accuracy (all) | Macro-F1 | Balanced acc. | Signal-consistent accuracy | Params | Size | Latency |
+|---|---|---|---|---|---|---|---|
+| Random Forest | **0.472** | **0.402** | **0.387** | **0.507** | — | 223 MB | not yet measured |
+| HistGradientBoosting | *0.438 (2-fold only, not comparable)* | 0.411 | 0.438 | — | — | 7.96 MB | not measured |
+| TinyCNN (Model 1) | 0.389 | 0.308 | 0.331 | 0.422 | 31,271 | 0.135 MB | 63.4 ms (CPU) |
+| CNN+GRU (Model 2) | 0.393 | 0.308 | 0.330 | 0.425 | 31,607 | 0.134 MB | 0.655 ms (CUDA T4) |
+
+Confusion matrices for all: `results/confusion_matrix*.png`. Full per-fold, per-class breakdowns: `results/classifier_metrics_*.json`.
+
+**Key findings, worth keeping in the report:**
+- **Both neural nets trail Random Forest by a consistent ~8 accuracy points, on every fold, not just on average.** Confirms the earlier hypothesis: raw-signal representation learning at a small (edge-appropriate) parameter budget is a genuinely harder problem than starting from RF's 302 hand-engineered, domain-informed features.
+- **TinyCNN vs CNN+GRU are statistically tied overall** (0.389 vs 0.393 accuracy, macro-F1 identical at 0.308) — adding recurrence bought nothing net-new at this scale. But the per-class breakdown shows it wasn't a no-op: the GRU improved periodicity-driven classes (bicycling F1 0.384→0.412, walking 0.541→0.557) while losing ground on postures with no periodic structure (standing_and_moving 0.156→0.116, sitting 0.328→0.302) — the two effects cancel overall. Legitimate design-story finding: temporal modeling helps where there's real periodic signal to exploit, not where the problem is posture ambiguity or label noise.
+- **RF's cost lead is inverted from its accuracy lead**: TinyCNN/CNN+GRU are each **~1,650× smaller on disk** than RF (0.135 MB vs 223 MB) for ~8 points less accuracy — a real, reportable accuracy-vs-size tradeoff point for the efficiency section, even though RF is likely still the right default pick given accuracy is weighted higher (35%) than efficiency (+10% extra credit) in the grading table.
+- **The latency numbers above are not a fair comparison as they stand** — TinyCNN was measured on CPU, CNN+GRU on a T4 GPU. A same-device measurement is a real open item before this goes in the report (see follow-ups below).
+
+**Bugs found and fixed along the way (worth citing under "correctness"):**
+- `MinuteRawDataset.__getitem__` used `torch.from_numpy()`, a zero-copy path tied to the exact NumPy C-API version PyTorch was compiled against. On Kaggle's NumPy-2.x base image this failed with a bare `RuntimeError: Numpy is not available`, reproducibly, surviving two rounds of `numpy<2` pinning + session restarts. Fixed by switching to `torch.tensor()` (commit `9029f2b`), which copies through a version-tolerant path.
+- Kaggle's **batch/API kernel execution silently swallowed real errors** on several attempts — processes died with zero captured log output and no auto-generated results page (most consistent with an abrupt container-level kill), making blind debugging unreliable. Resolved by switching to an **interactive Kaggle notebook** (`notebooks/Model2_CNNGRU_Kaggle.ipynb`) where tracebacks print directly under the failing cell — this is what actually surfaced the numpy/torch bug above; the batch API never showed it.
+- Kaggle assigned GPUs (a Tesla P100, later a T4) that were **incompatible with whichever PyTorch build was tried first** in both directions — a P100 rejected by a too-new default build, and `torch==2.1.2` unavailable for Kaggle's Python 3.12 — landed on `torch==2.2.2+cu118` as the version that actually works across both GPU types tried.
+- `requirements.txt` was found with **literal unresolved git merge-conflict markers** committed into it by a teammate's merge (commit fixed in `c9d8ce8`) — would have broken `pip install -r requirements.txt` for anyone, including a TA reproducibility check.
+
+**Follow-ups still open, not yet done:**
+- Finish HistGradientBoosting's full 5-fold run (currently only 2 folds) before treating it as a real fourth data point in the comparison table.
+- Measure RF's latency/peak-memory the same way the NN cost block does, and re-measure both NNs on the *same* device (both CPU, or both GPU) for a fair efficiency comparison — required for Phase 6 regardless.
+- The "revise model suggestion" discussion (this session) concluded the more promising path to actually *beating* RF is a small feedforward net trained on RF's own 302 engineered features (removes the raw-signal-learning handicap entirely) rather than a bigger/different raw-signal architecture — not yet built.
+
+**12. Final recognizer pick — leaning Random Forest, not yet formally closed.** Given accuracy is weighted far higher than efficiency in the grading table (35% vs up to +10%) and RF leads by a clear, consistent margin, RF is the reasonable default for the recognizer Phase 3/4 build against — but this is a team call, not unilaterally decided here, and should be revisited once the same-device cost numbers and the features-based NN (above) exist.
 
 ---
 
-## Phase 3 — Aggregation layer / the "timeline" (Day 4)
+## Phase 3 — Aggregation layer / the "timeline" (Day 4) — **built by chadsaras (`baf2d13`), not yet re-verified in this session**
+
+Whole-burst inference, gap-aware interval merging, intervals that never span unrecorded time. Two real test fixtures with hand-derived ground truth exist under `tests/fixtures/`. Currently built against the Random Forest backbone (`results/model_rf.joblib`) — swapping in a different final recognizer per Step 12 above would need this layer re-pointed at the new model.
 
 **13. Run the recognizer over a full recording to get a per-window label sequence.** Smooth it lightly (e.g., merge single flickering windows) so "walking" doesn't randomly blip to "standing" for one window and back.
 
@@ -110,7 +144,9 @@ PLAN.md
 
 ---
 
-## Phase 4 — Question-answering interface (Day 5 – Day 7)
+## Phase 4 — Question-answering interface (Day 5 – Day 7) — **started by a teammate (`9729efb`), not yet reviewed in this session**
+
+`src/query/intent.py` + `src/query/schema.py`: a hybrid intent parser (Pydantic schemas + a rule-based fast path, falling back to an Ollama/LangChain LLM) — matches the plan's Step 17 approach below. Not yet verified against the "never let the SLM invent numbers" rule, and not yet wired to Phase 3's timeline output — worth a close read before building further on top of it.
 
 **16. Write the fixed-template output formatter first**, matching the brief's exact field order (Answer / Activity-Event / Evidence: Timestamp, Modality, Channel(s) / Explanation). Every other function will call this at the end — build it once, early, so nothing downstream reinvents formatting.
 
