@@ -67,5 +67,9 @@ class MinuteRawDataset(Dataset):
         return len(self.y)
 
     def __getitem__(self, i: int):
-        x = torch.from_numpy(self.X[i]).transpose(0, 1)   # (RAW_T, 6) -> (6, RAW_T)
+        # torch.tensor(), not torch.from_numpy(): the latter is a zero-copy path tied
+        # to the exact NumPy C-API version torch was built against, and breaks with a
+        # bare "RuntimeError: Numpy is not available" on any environment where that
+        # doesn't line up (hit this on Kaggle's numpy 2.x base image).
+        x = torch.tensor(self.X[i], dtype=torch.float32).transpose(0, 1)   # (RAW_T, 6) -> (6, RAW_T)
         return x, int(self.y[i])
