@@ -1,5 +1,69 @@
 # Recognition backbone: results
 
+Six models were trained and evaluated on the identical official 5-fold user-level split, over the identical set of minutes: two tree ensembles (Random Forest, HistGradientBoosting) over 302 hand-engineered features, two raw-signal neural nets capacity-matched to each other (TinyCNN, CNN+GRU), a feedforward net over the same 302 engineered features as the tree models (FeatureMLP), and a final variant of that net given multi-minute temporal context (FeatureMLP+Context). All numbers below are measured, not estimated.
+
+## Final comparison across all six models
+
+| Model | Accuracy (all) | Macro-F1 | Balanced acc. | Accuracy (signal-consistent) | Params | Size | Latency |
+|---|---|---|---|---|---|---|---|
+| **FeatureMLP + Context (final pick)** | **0.492** | **0.431** | **0.439** | **0.526** | 189,447 | 0.77 MB | 2.62 ms (CPU) |
+| Random Forest | 0.472 | 0.402 | 0.387 | 0.507 | — | 223 MB | not measured |
+| FeatureMLP | 0.448 | 0.376 | 0.398 | 0.481 | 112,135 | 0.46 MB | 1.08 ms (CPU) |
+| HistGradientBoosting | 0.438* | 0.411* | 0.438* | — | — | 7.96 MB | not measured |
+| CNN+GRU | 0.393 | 0.308 | 0.330 | 0.425 | 31,607 | 0.134 MB | 0.655 ms (CUDA, T4) |
+| TinyCNN | 0.389 | 0.308 | 0.331 | 0.422 | 31,271 | 0.135 MB | 63.4 ms (CPU) |
+
+\* HistGradientBoosting was only evaluated on 2 of the 5 folds (a quick comparison run), not the full 5-fold split every other model uses -- not directly comparable to the other rows, shown for reference only.
+
+**Final pick: FeatureMLP + Context.** It beats Random Forest on every pooled metric and on 4 of 5 individual folds (essentially tied on the 5th), while being roughly 290x smaller on disk. The two raw-signal nets (TinyCNN, CNN+GRU) consistently trailed Random Forest by ~8 accuracy points on every fold -- the representation-learning job from raw signal alone, at a small/edge-appropriate parameter budget, proved harder than starting from good hand-engineered features. Handing a neural net those same 302 features (FeatureMLP) closed most of that gap; adding multi-minute temporal context on top of that (FeatureMLP + Context) closed the rest and overtook Random Forest. The honest ceiling on this task, even with the best approach found, remains in the high-40s/low-50s percent, not higher -- traced in Table 6 below to measured label noise and physically ambiguous posture classes, not a model-capacity limitation five different architectures all hit the same wall on.
+
+## Model progression (the neural-network side of the design story)
+
+| Step | Approach | Accuracy | Macro-F1 | What changed |
+|---|---|---|---|---|
+| 1 | TinyCNN | 0.389 | 0.308 | Raw-signal 1D-CNN, learns its own features from scratch |
+| 2 | CNN+GRU | 0.393 | 0.308 | Adds recurrence for temporal structure -- capacity-matched to TinyCNN; net accuracy unchanged, but per-class it helped periodicity-driven classes (bicycling, walking) while losing ground on ambiguous postures (sitting, standing) |
+| 3 | FeatureMLP | 0.448 | 0.376 | Switches input from raw signal to Random Forest's own 302 engineered features -- removes the raw-signal representation-learning handicap entirely |
+| 4 | **FeatureMLP + Context** | **0.492** | **0.431** | Concatenates each minute's own features with the mean of its temporal neighbours (up to 2 minutes before/after, only within real time-continuity) -- resolves single-minute ambiguity using surrounding context |
+
+## Winning model (FeatureMLP + Context): per-fold results
+
+| Fold | Minutes | Accuracy | Macro-F1 | Balanced acc. |
+|---|---|---|---|---|
+| Fold 0 | 20,394 | 0.491 | 0.398 | 0.467 |
+| Fold 1 | 20,424 | 0.464 | 0.415 | 0.518 |
+| Fold 2 | 20,008 | 0.543 | 0.480 | 0.475 |
+| Fold 3 | 20,242 | 0.489 | 0.387 | 0.392 |
+| Fold 4 | 14,541 | 0.463 | 0.428 | 0.460 |
+
+## Winning model (FeatureMLP + Context): per-class performance (all test minutes)
+
+| Class | Precision | Recall | F1 | Test minutes | Correctly predicted |
+|---|---|---|---|---|---|
+| Lying down | 0.506 | 0.726 | 0.596 | 20,855 | 15,141 |
+| Sitting | 0.533 | 0.476 | 0.503 | 22,536 | 10,727 |
+| Standing in place | 0.221 | 0.284 | 0.248 | 7,909 | 2,246 |
+| Standing and moving | 0.318 | 0.215 | 0.257 | 17,073 | 3,671 |
+| Walking | 0.670 | 0.557 | 0.608 | 21,417 | 11,929 |
+| Running | 0.124 | 0.159 | 0.139 | 1,078 | 171 |
+| Bicycling | 0.673 | 0.653 | 0.663 | 4,741 | 3,096 |
+
+## Winning model (FeatureMLP + Context): per-class performance (signal-consistent minutes)
+
+| Class | Precision | Recall | F1 | Test minutes | Correctly predicted |
+|---|---|---|---|---|---|
+| Lying down | 0.537 | 0.726 | 0.617 | 20,855 | 15,141 |
+| Sitting | 0.568 | 0.476 | 0.518 | 22,536 | 10,727 |
+| Standing in place | 0.271 | 0.284 | 0.277 | 7,909 | 2,246 |
+| Standing and moving | 0.364 | 0.215 | 0.270 | 17,073 | 3,671 |
+| Walking | 0.667 | 0.740 | 0.702 | 15,905 | 11,770 |
+| Running | 0.127 | 0.259 | 0.171 | 653 | 169 |
+| Bicycling | 0.676 | 0.758 | 0.715 | 4,019 | 3,046 |
+
+---
+
+## Appendix: Random Forest baseline deep-dive
+
 Configuration: rf, level=minute, feature subset=noori (302 features), cleaned training=True, 5 folds, leave-users-out.
 
 ## Table 1: Overall accuracy
@@ -137,4 +201,58 @@ Bicycling & 4,741 & 722 & 15.2% & 4.0 \\
 \end{tabular}
 \caption{Label noise measured against the recorded signal.}
 \label{tab:noise}
+\end{table}
+
+\begin{table}[t]
+\centering
+\begin{tabular}{lrrrrrr}
+\hline
+Model & Acc. (all) & Macro-F1 & Bal. acc. & Acc. (consistent) & Params & Size \\
+\hline
+FeatureMLP + Context (final) & 0.492 & 0.431 & 0.439 & 0.526 & 189,447 & 0.77 MB \\
+Random Forest & 0.472 & 0.402 & 0.387 & 0.507 & -- & 223 MB \\
+FeatureMLP & 0.448 & 0.376 & 0.398 & 0.481 & 112,135 & 0.46 MB \\
+HistGradientBoosting* & 0.438 & 0.411 & 0.438 & -- & -- & 7.96 MB \\
+CNN+GRU & 0.393 & 0.308 & 0.330 & 0.425 & 31,607 & 0.134 MB \\
+TinyCNN & 0.389 & 0.308 & 0.331 & 0.422 & 31,271 & 0.135 MB \\
+\hline
+\end{tabular}
+\caption{Final comparison across all six recognition models, identical 5-fold split. *HistGradientBoosting evaluated on 2 of 5 folds only, not directly comparable.}
+\label{tab:final-comparison}
+\end{table}
+
+\begin{table}[t]
+\centering
+\begin{tabular}{lrrrr}
+\hline
+Fold & Minutes & Accuracy & Macro-F1 & Bal. acc. \\
+\hline
+Fold 0 & 20,394 & 0.491 & 0.398 & 0.467 \\
+Fold 1 & 20,424 & 0.464 & 0.415 & 0.518 \\
+Fold 2 & 20,008 & 0.543 & 0.480 & 0.475 \\
+Fold 3 & 20,242 & 0.489 & 0.387 & 0.392 \\
+Fold 4 & 14,541 & 0.463 & 0.428 & 0.460 \\
+\hline
+\end{tabular}
+\caption{FeatureMLP + Context: per-fold results.}
+\label{tab:mlpctx-folds}
+\end{table}
+
+\begin{table}[t]
+\centering
+\begin{tabular}{lrrrrr}
+\hline
+Class & Precision & Recall & F1 & Minutes & Correct \\
+\hline
+Lying down & 0.506 & 0.726 & 0.596 & 20,855 & 15,141 \\
+Sitting & 0.533 & 0.476 & 0.503 & 22,536 & 10,727 \\
+Standing in place & 0.221 & 0.284 & 0.248 & 7,909 & 2,246 \\
+Standing and moving & 0.318 & 0.215 & 0.257 & 17,073 & 3,671 \\
+Walking & 0.670 & 0.557 & 0.608 & 21,417 & 11,929 \\
+Running & 0.124 & 0.159 & 0.139 & 1,078 & 171 \\
+Bicycling & 0.673 & 0.653 & 0.663 & 4,741 & 3,096 \\
+\hline
+\end{tabular}
+\caption{FeatureMLP + Context: per-class performance, all test minutes.}
+\label{tab:mlpctx-perclass}
 \end{table}

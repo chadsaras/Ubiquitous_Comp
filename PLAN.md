@@ -21,7 +21,7 @@ Assign people to tracks once the third member is confirmed; all three can start 
 
 ## Current status (updated as of this commit)
 
-Phase 0 and Phase 1 are fully done. Phase 2 (recognition backbone) is fully done, with **two tree models and two neural models trained and evaluated end to end**, all on the identical official 5-fold split and the identical set of minutes — full results below in Phase 2. Phase 3 (aggregation/timeline) has been built by chadsaras (commit `baf2d13`). Phase 4 (question-answering interface) has been started by a teammate — a hybrid rule-based/LLM intent parser (commit `9729efb`, `src/query/`). Phases 5–8 not started.
+Phase 0 and Phase 1 are fully done. Phase 2 (recognition backbone) is fully done, with **six models trained and evaluated end to end** (two tree ensembles, two raw-signal neural nets, and two engineered-feature neural nets, the last of which won), all on the identical official 5-fold split and the identical set of minutes — full results below in Phase 2, and the final model pick is closed (Step 12). Phase 3 (aggregation/timeline) has been built by chadsaras (commit `baf2d13`) but currently points at Random Forest, not the new final pick — needs re-pointing. Phase 4 (question-answering interface) has been started by a teammate — a hybrid rule-based/LLM intent parser (commit `9729efb`, `src/query/`). Phases 5–8 not started.
 
 Phase 0/1, contributed by chadsaras:
 - Repo scaffold, `requirements.txt`, `.gitignore` — **done**.
@@ -100,14 +100,20 @@ PLAN.md
 
 Both use the raw, fixed-length (500 timesteps × 6 channel) burst per minute as input (`src/recognize/nn_data.py`), not the 302 engineered features — the point of Step 10 was testing whether a model can learn its own useful representation directly from signal.
 
-**11. Evaluate all four on the same 5-fold split — Done.** Full numbers:
+**11. Evaluate all six on the same 5-fold split — Done.** Full numbers:
 
 | Model | Pooled accuracy (all) | Macro-F1 | Balanced acc. | Signal-consistent accuracy | Params | Size | Latency |
 |---|---|---|---|---|---|---|---|
-| Random Forest | **0.472** | **0.402** | **0.387** | **0.507** | — | 223 MB | not yet measured |
+| **FeatureMLP + Context (final pick, see Step 12)** | **0.492** | **0.431** | **0.439** | **0.526** | 189,447 | 0.77 MB | 2.62 ms (CPU) |
+| Random Forest | 0.472 | 0.402 | 0.387 | 0.507 | — | 223 MB | not measured |
+| FeatureMLP | 0.448 | 0.376 | 0.398 | 0.481 | 112,135 | 0.46 MB | 1.08 ms (CPU) |
 | HistGradientBoosting | *0.438 (2-fold only, not comparable)* | 0.411 | 0.438 | — | — | 7.96 MB | not measured |
 | TinyCNN (Model 1) | 0.389 | 0.308 | 0.331 | 0.422 | 31,271 | 0.135 MB | 63.4 ms (CPU) |
 | CNN+GRU (Model 2) | 0.393 | 0.308 | 0.330 | 0.425 | 31,607 | 0.134 MB | 0.655 ms (CUDA T4) |
+
+**A fifth and sixth model were added after the initial four, once RF's lead over both neural nets held consistently:**
+- **FeatureMLP** (`scripts/train_mlp.py`): a 302→256→128→7 feedforward net trained on the *same* 302 engineered features Random Forest uses, instead of raw signal — removes the raw-signal representation-learning handicap. Closed most of the gap to RF (0.448 vs 0.472).
+- **FeatureMLP + Context** (`scripts/train_mlp_context.py`): the same net, but each minute's own features are concatenated with the mean of its temporal neighbours (up to 2 minutes before/after, only counted when actually close in time — a gap >90s stops that direction, verified with 4 targeted unit tests before running on real data). Every prior model classified each minute in total isolation; this is the first to use temporal context, and it **overtook Random Forest** — the only model of the six to do so.
 
 Confusion matrices for all: `results/confusion_matrix*.png`. Full per-fold, per-class breakdowns: `results/classifier_metrics_*.json`.
 
@@ -124,11 +130,11 @@ Confusion matrices for all: `results/confusion_matrix*.png`. Full per-fold, per-
 - `requirements.txt` was found with **literal unresolved git merge-conflict markers** committed into it by a teammate's merge (commit fixed in `c9d8ce8`) — would have broken `pip install -r requirements.txt` for anyone, including a TA reproducibility check.
 
 **Follow-ups still open, not yet done:**
-- Finish HistGradientBoosting's full 5-fold run (currently only 2 folds) before treating it as a real fourth data point in the comparison table.
-- Measure RF's latency/peak-memory the same way the NN cost block does, and re-measure both NNs on the *same* device (both CPU, or both GPU) for a fair efficiency comparison — required for Phase 6 regardless.
-- The "revise model suggestion" discussion (this session) concluded the more promising path to actually *beating* RF is a small feedforward net trained on RF's own 302 engineered features (removes the raw-signal-learning handicap entirely) rather than a bigger/different raw-signal architecture — not yet built.
+- Finish HistGradientBoosting's full 5-fold run (currently only 2 folds) before treating it as a real data point in the comparison table.
+- Measure Random Forest's latency/peak-memory the same way the NN cost blocks do, and re-measure the raw-signal nets on the *same* device (both CPU, or both GPU) for a fully fair efficiency comparison across all six.
+- The 80%+ accuracy question was raised and resolved this session (not a resource or model-choice limitation — a measured data/label-noise/posture-ambiguity ceiling; see the "80%" discussion in conversation history). The honest ceiling for this task is the high-40s/low-50s percent, not higher, even with the best approach found.
 
-**12. Final recognizer pick — leaning Random Forest, not yet formally closed.** Given accuracy is weighted far higher than efficiency in the grading table (35% vs up to +10%) and RF leads by a clear, consistent margin, RF is the reasonable default for the recognizer Phase 3/4 build against — but this is a team call, not unilaterally decided here, and should be revisited once the same-device cost numbers and the features-based NN (above) exist.
+**12. Final recognizer pick — FeatureMLP + Context. Closed.** It wins on every pooled metric against Random Forest (0.492 vs 0.472 accuracy, 0.431 vs 0.402 macro-F1) and on 4 of 5 individual folds, while being ~290x smaller on disk (0.77 MB vs 223 MB) — so unlike the four-model comparison above, this isn't a tradeoff decision between accuracy and efficiency, it wins both. Phase 3/4 should be built against this model going forward; `src/aggregate/timeline.py` currently points at `results/model_rf.joblib` and will need re-pointing at `results/model_mlpctx.pt` (note: this model consumes 604-dim engineered-feature-plus-context vectors, not the RF's 302 or the raw signal the timeline layer's window-feature extraction currently assumes — integration work, not a drop-in swap).
 
 ---
 
