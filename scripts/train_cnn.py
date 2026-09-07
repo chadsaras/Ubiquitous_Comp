@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-Train Model 1 (PLAN.md Step 10): a small 1D-CNN recognizer over the raw signal,
-evaluated on the exact same official 5-fold user-level split as the tree models
-in scripts/train_classifier.py, so the two are directly, fairly comparable.
+Train PLAN.md Step 10's neural recognizers over the raw signal, evaluated on the
+exact same official 5-fold user-level split as the tree models in
+scripts/train_classifier.py, so all models are directly, fairly comparable.
 
-    python scripts/train_cnn.py                          # CPU, all 5 folds
-    python scripts/train_cnn.py --device cuda             # GPU, if usable
+    python scripts/train_cnn.py                          # Model 1 (TinyCNN), CPU, all 5 folds
+    python scripts/train_cnn.py --arch cnngru             # Model 2 (CNN+GRU)
+    python scripts/train_cnn.py --arch cnngru --device cuda
     python scripts/train_cnn.py --folds 0 1               # quick partial check
     python scripts/train_cnn.py --epochs 40 --patience 8  # longer training budget
 
 Prerequisite: scripts/build_raw_cache.py must have already produced
-data/processed/raw_minutes.npz (same --cap policy as build_features.py, so the
-CNN trains on the identical set of minutes as the RF/HGB models).
+data/processed/raw_minutes.npz (same --cap policy as build_features.py, so both
+NN architectures train on the identical set of minutes as the RF/HGB models).
 
 Design (mirrors scripts/train_classifier.py so results line up 1:1):
   * Fresh, randomly-initialised model every fold -- no weight carries over between
@@ -25,13 +26,13 @@ Design (mirrors scripts/train_classifier.py so results line up 1:1):
   * a validation slice is carved from the fold's TRAIN users only (never from
     test) for early stopping -- new plumbing the tree models didn't need.
 
-Outputs (results/):
-    confusion_matrix_cnn.png       row-normalised, all test minutes
-    classifier_metrics_cnn.json    same schema as classifier_metrics.json, plus
-                                    a "cost" block (params, size, latency)
-    model_cnn.pt                   final model trained on all users (state_dict
-                                    + architecture metadata), gitignored like the
-                                    RF/HGB .joblib files
+Outputs (results/), suffixed by --arch so Model 1 and Model 2 runs coexist:
+    confusion_matrix_<arch>.png       row-normalised, all test minutes
+    classifier_metrics_<arch>.json    same schema as classifier_metrics.json,
+                                       plus a "cost" block (params, size, latency)
+    model_<arch>.pt                   final model trained on all users (state_dict
+                                       + architecture metadata), gitignored like
+                                       the RF/HGB .joblib files
 """
 from __future__ import annotations
 
@@ -51,10 +52,11 @@ from torch.utils.data import DataLoader
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.preprocess.load import CLASSES, load_folds                         # noqa: E402
 from src.recognize.nn_data import RAW_T, CHANNELS, STILL_G, MinuteRawDataset, still_mask  # noqa: E402
-from src.recognize.nn_models import TinyCNN, count_params                    # noqa: E402
+from src.recognize.nn_models import build_model, count_params                # noqa: E402
 
 PRETTY = ["Lying", "Sitting", "Stand (place)", "Stand (moving)", "Walking", "Running", "Bicycling"]
 ACTIVE = {4, 5, 6}
+ARCH_NAME = {"cnn": "TinyCNN", "cnngru": "CNNGRU"}
 
 
 # --------------------------------------------------------------------------- training
@@ -87,12 +89,12 @@ def run_epoch(model, loader, device, optimizer=None, criterion=None) -> tuple[fl
     return tot_loss / max(n, 1), np.concatenate(yt_all), np.concatenate(yp_all)
 
 
-def train_one_model(Xtr, ytr, Xval, yval, device, epochs, batch_size, lr, wd, patience, seed) -> tuple[nn.Module, dict]:
+def train_one_model(Xtr, ytr, Xval, yval, device, arch, epochs, batch_size, lr, wd, patience, seed) -> tuple[nn.Module, dict]:
     set_seed(seed)
     tr_loader = DataLoader(MinuteRawDataset(Xtr, ytr), batch_size=batch_size, shuffle=True, drop_last=len(ytr) > batch_size)
     val_loader = DataLoader(MinuteRawDataset(Xval, yval), batch_size=256, shuffle=False)
 
-    model = TinyCNN().to(device)
+    model = build_model(arch).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=wd)
     criterion = nn.CrossEntropyLoss(weight=class_weights(ytr).to(device))
 
@@ -170,6 +172,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--raw", default="data/processed/raw_minutes.npz")
     ap.add_argument("--data-dir", default="data")
+    ap.add_argument("--arch", default="cnn", choices=["cnn", "cnngru"],
+                    help="cnn = Model 1 (TinyCNN), cnngru = Model 2 (CNN+GRU)")
     ap.add_argument("--device", default="cpu", choices=["cpu", "cuda"])
     ap.add_argument("--epochs", type=int, default=25)
     ap.add_argument("--batch-size", type=int, default=128)
@@ -188,7 +192,7 @@ def main() -> None:
         print("cuda requested but not available; falling back to cpu")
         args.device = "cpu"
     device = torch.device(args.device)
-    print(f"device: {device}")
+    print(f"device: {device}  arch: {args.arch} ({ARCH_NAME[args.arch]})")
 
     d = np.load(args.raw, allow_pickle=True)
     X, y, n_valid, uuid = d["X"], d["y"], d["n_valid"], d["uuid"].astype(str)
@@ -221,7 +225,7 @@ def main() -> None:
         t0 = time.time()
         print(f"\n=== fold {k}: train {tr_mask.sum()} ({len(tr_users)} users) / "
               f"val {val_mask.sum()} ({len(val_users)} users) / test {te_mask.sum()} ({len(te_users)} users) ===")
-        model, hist = train_one_model(X[tr_mask], y[tr_mask], X[val_mask], y[val_mask], device,
+        model, hist = train_one_model(X[tr_mask], y[tr_mask], X[val_mask], y[val_mask], device, args.arch,
                                       args.epochs, args.batch_size, args.lr, args.weight_decay,
                                       args.patience, args.seed + k)
         yp = predict(model, X[te_mask], device)
@@ -239,8 +243,8 @@ def main() -> None:
     pooled_all = report(yt, yp, "POOLED, all test minutes (headline)")
     pooled_cons = report(yt[cons], yp[cons], "POOLED, signal-consistent test minutes")
     cm = confusion_matrix(yt, yp, labels=range(7))
-    plot_cm(cm, out / "confusion_matrix_cnn.png",
-            "Activity confusion matrix (row-normalised), TinyCNN,\n5-fold user-level CV")
+    plot_cm(cm, out / f"confusion_matrix_{args.arch}.png",
+            f"Activity confusion matrix (row-normalised), {ARCH_NAME[args.arch]},\n5-fold user-level CV")
 
     # ---------------------------------------------------------- final model on ALL users
     print("\ntraining final model on all users (small internal val slice for early stopping)...")
@@ -249,12 +253,12 @@ def main() -> None:
     fit_mask = np.isin(uuid, fit_users); val_mask = np.isin(uuid, val_users)
     if clean:
         fit_mask = fit_mask & consistent; val_mask = val_mask & consistent
-    final_model, final_hist = train_one_model(X[fit_mask], y[fit_mask], X[val_mask], y[val_mask], device,
+    final_model, final_hist = train_one_model(X[fit_mask], y[fit_mask], X[val_mask], y[val_mask], device, args.arch,
                                               args.epochs, args.batch_size, args.lr, args.weight_decay,
                                               args.patience, args.seed)
 
-    mpath = out / "model_cnn.pt"
-    torch.save({"state_dict": final_model.state_dict(), "arch": "TinyCNN", "raw_t": RAW_T,
+    mpath = out / f"model_{args.arch}.pt"
+    torch.save({"state_dict": final_model.state_dict(), "arch": ARCH_NAME[args.arch], "raw_t": RAW_T,
                "channels": CHANNELS, "classes": CLASSES}, mpath)
     size_mb = mpath.stat().st_size / 1e6
     n_params = count_params(final_model)
@@ -274,8 +278,8 @@ def main() -> None:
     print(f"saved {mpath}  ({size_mb:.2f} MB on disk, {n_params:,} params, "
           f"{latency_ms:.2f} ms/prediction on {device})")
 
-    (out / "classifier_metrics_cnn.json").write_text(json.dumps({
-        "config": vars(args) | {"clean": clean, "arch": "TinyCNN", "raw_t": RAW_T,
+    (out / f"classifier_metrics_{args.arch}.json").write_text(json.dumps({
+        "config": vars(args) | {"clean": clean, "arch_name": ARCH_NAME[args.arch], "raw_t": RAW_T,
                                 "still_g": STILL_G, "device": str(device)},
         "folds": {str(k): v for k, v in per_fold.items()},
         "pooled_all": pooled_all, "pooled_signal_consistent": pooled_cons,
@@ -285,7 +289,7 @@ def main() -> None:
         "final_model_training": {"best_val_macro_f1": final_hist["best_val_macro_f1"],
                                  "epochs_run": final_hist["epochs_run"]},
     }, indent=2))
-    print(f"\nsaved {out / 'classifier_metrics_cnn.json'}")
+    print(f"\nsaved {out / f'classifier_metrics_{args.arch}.json'}")
 
 
 if __name__ == "__main__":
