@@ -5,4 +5,10 @@ scikit-learn
 matplotlib
 requests
 tqdm
+<<<<<<< HEAD
 torch
+=======
+langchain-ollama
+pydantic
+langchain-core
+>>>>>>> 81c8eed (feat: implement hybrid query intent parser using Pydantic schemas and Ollama/LangChain with a rule-based fast path)
