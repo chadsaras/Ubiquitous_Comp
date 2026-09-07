@@ -4,5 +4,6 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 results/*.joblib
+results/*.pt
 results/*.log
 tests/fixtures/*/recording.csv
