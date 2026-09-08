@@ -6,7 +6,7 @@ adhering strictly to Contract 1 (Timeline) and Contract 2 (Output Block).
 from __future__ import annotations
 from typing import List, Optional
 from src.query.schema import QueryIntent, IntentType, FormattedAnswerBlock
-
+from src.query.explain import generate_explanation
 
 try:
     from src.aggregate.schema import fmt_range, format_answer
@@ -74,8 +74,7 @@ def handle_verify(intent: QueryIntent, timeline) -> FormattedAnswerBlock:
             timestamps=fmt_range(ivs),
             sensor_modality="Accelerometer, Gyroscope",
             sensor_channels="All",
-            explanation=f"{_fmt_activity(target)} was detected for a total duration of "
-                        f"{int(round(dur))} seconds across {len(ivs)} distinct episode(s)."
+            explanation = generate_explanation(target, dur, ivs)
         )
     else:
         return FormattedAnswerBlock(
@@ -109,8 +108,9 @@ def handle_duration(intent: QueryIntent, timeline) -> FormattedAnswerBlock:
             timestamps="N/A",
             sensor_modality="N/A",
             sensor_channels="N/A",
-            explanation=f"{act_name} was not detected in the recording (0 seconds)."
+            explanation=generate_explanation(target, dur, ivs)
         )
+
 
     dur_int = int(round(dur))
     if len(ivs) == 1:
@@ -166,11 +166,8 @@ def handle_onset(intent: QueryIntent, timeline) -> FormattedAnswerBlock:
         dom_freq = summary.get("acc_dom_freq_hz", 0.0)
 
         # Build evidence grounding explanation citing real signal features
-        explanation = (
-            f"A sustained rise in accelerometer magnitude variance (acc_mag_std = {acc_std:.3f} g) "
-            f"at cadence {dom_freq:.1f} Hz marks the onset transition to {target.replace('_', ' ')} "
-            f"at {t_onset} seconds."
-        )
+        explanation = generate_explanation(target, first_iv.end - first_iv.start, [first_iv])
+
 
         return FormattedAnswerBlock(
             answer=f"Yes, {target.replace('_', ' ')} began at {t_onset} seconds",
