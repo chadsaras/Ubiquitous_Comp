@@ -9,3 +9,4 @@ torch
 langchain-ollama
 pydantic
 langchain-core
+joblib

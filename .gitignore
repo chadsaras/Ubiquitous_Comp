@@ -4,4 +4,4 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 results/*.log
-tests/fixtures/*/recording.csv
+tests/fixtures/*/recording.csv.DS_Store

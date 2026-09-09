@@ -28,6 +28,28 @@ import sys
 from pathlib import Path
 
 import joblib
+
+import sys
+import types
+import joblib
+
+# ---------------------------------------------------------------------------
+# Scikit-learn backwards-compatibility bridge for model_hgb.joblib (1.7 -> 1.9)
+# ---------------------------------------------------------------------------
+try:
+    import sklearn._loss as _sk_loss
+    if "_loss" not in sys.modules:
+        loss_mod = types.ModuleType("_loss")
+        for k, v in vars(_sk_loss).items():
+            setattr(loss_mod, k, v)
+        if hasattr(_sk_loss, "_loss"):
+            for k, v in vars(_sk_loss._loss).items():
+                setattr(loss_mod, k, v)
+        sys.modules["_loss"] = loss_mod
+except ImportError:
+    pass
+
+
 import numpy as np
 import pandas as pd
 
