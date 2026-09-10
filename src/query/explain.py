@@ -19,7 +19,11 @@ STRICT RULES:
    - Walking: cyclic acceleration variance (std ~0.10-0.15 g) at stepping cadence ~1.8-2.2 Hz.
    - Running: high acceleration variance (std ~0.3-0.5 g) at cadence ~2.6-3.0 Hz with pronounced impact spikes.
    - Bicycling: smooth low-impact acceleration variance (~0.12-0.16 g) accompanied by sustained periodic gyroscope angular velocity.
-3. Output ONLY the explanation sentence. Do not add preamble, greetings, or formatting.
+3. Each metric below is pre-labelled "(within typical range)" or "(ATYPICAL for <activity>, usual range ...)".
+   You MUST NOT claim a metric is "consistent with" or "typical for" the activity if it is
+   labelled ATYPICAL -- for an atypical metric, say plainly that it falls outside the usual
+   range instead. Never assert consistency the label does not support.
+4. Output ONLY the explanation sentence. Do not add preamble, greetings, or formatting.
 """
 
 _explain_chain = None
@@ -27,7 +31,7 @@ _explain_chain = None
 def get_explain_chain(model_name: str = "qwen2.5:1.5b"):
     global _explain_chain
     if _explain_chain is None:
-        llm = ChatOllama(model=model_name, temperature=0.1)
+        llm = ChatOllama(model=model_name, temperature=0.0)
         prompt = ChatPromptTemplate.from_messages([
             ("system", EXPLANATION_SYSTEM_PROMPT),
             ("human", (
@@ -41,14 +45,35 @@ def get_explain_chain(model_name: str = "qwen2.5:1.5b"):
     return _explain_chain
 
 
-def _build_metrics_summary(summary: Optional[Dict[str, Any]]) -> str:
+# Same bands as STRICT RULE 2 in the system prompt, kept in code so "typical vs atypical" is a
+# computed fact handed to the LLM, not something it has to judge (and can get wrong) itself.
+TYPICAL_RANGES: Dict[str, Dict[str, tuple]] = {
+    "walking": {"acc_mag_std": (0.10, 0.15), "acc_dom_freq_hz": (1.8, 2.2)},
+    "running": {"acc_mag_std": (0.3, 0.5), "acc_dom_freq_hz": (2.6, 3.0)},
+    "sitting": {"acc_mag_std": (0.002, 0.006)},
+    "lying_down": {"acc_mag_std": (0.002, 0.006)},
+    "bicycling": {"acc_mag_std": (0.12, 0.16)},
+}
+
+
+def _range_label(activity: str, key: str, value: float) -> str:
+    lo_hi = TYPICAL_RANGES.get(activity, {}).get(key)
+    if lo_hi is None:
+        return ""
+    lo, hi = lo_hi
+    return " (within typical range)" if lo <= value <= hi else f" (ATYPICAL for {activity.replace('_', ' ')}, usual range {lo}-{hi})"
+
+
+def _build_metrics_summary(summary: Optional[Dict[str, Any]], activity: str = "") -> str:
     if not summary:
         return "No granular burst statistics available."
     parts = []
     if "acc_mag_std" in summary:
-        parts.append(f"acc_mag_std = {summary['acc_mag_std']:.3f} g")
+        v = summary["acc_mag_std"]
+        parts.append(f"acc_mag_std = {v:.3f} g{_range_label(activity, 'acc_mag_std', v)}")
     if "acc_dom_freq_hz" in summary:
-        parts.append(f"cadence = {summary['acc_dom_freq_hz']:.1f} Hz")
+        v = summary["acc_dom_freq_hz"]
+        parts.append(f"cadence = {v:.1f} Hz{_range_label(activity, 'acc_dom_freq_hz', v)}")
     if "gyro_mag_std" in summary:
         parts.append(f"gyro_mag_std = {summary['gyro_mag_std']:.3f} rad/s")
     if "acc_mag_range" in summary:
@@ -73,7 +98,7 @@ def generate_explanation(
     # Aggregate summary from first or most significant interval
     rep_interval = max(intervals, key=lambda iv: iv.end - iv.start)
     summary = rep_interval.summary or {}
-    metrics_str = _build_metrics_summary(summary)
+    metrics_str = _build_metrics_summary(summary, activity)
     num_ivs = len(intervals)
     dur_int = int(round(duration_sec))
 

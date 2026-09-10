@@ -98,8 +98,10 @@ def parse_intent_fast_rules(question: str) -> Optional[QueryIntent]:
     if "strenuous" in q:
         return QueryIntent(intent=IntentType.OPEN_WORLD, semantic_concept="strenuous_activity")
 
-    # 6. Verify
-    if q.startswith(("is the user", "was the user", "did the user")) and acts:
+    # 6. Verify -- any yes/no-style question ("is/was/did/does/were/has ...") naming an
+    # activity, not just the literal phrase "the user" (real subjects vary: "she", "he",
+    # a name, "the grandmother", etc.)
+    if re.match(r"^(is|was|were|did|does|do|has|had|are)\b", q) and acts:
         return QueryIntent(intent=IntentType.VERIFY, target_activity=acts[0])
 
     # 7. Identify

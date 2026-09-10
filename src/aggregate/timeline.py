@@ -299,9 +299,125 @@ def split_on_gaps(ivs: list[Interval], wdf: pd.DataFrame, pad_to: float | None,
 
 # ------------------------------------------------------------------ public API
 def load_model(path: str | Path) -> dict:
-    """Returns the training bundle {model, mask, context, ...}; wraps a bare estimator if needed."""
+    """
+    Returns the training bundle {model, mask, context, ...}; wraps a bare estimator if needed.
+
+    A ".pt" path (e.g. results/model_mlpctx.pt) loads a PyTorch FeatureMLP-family model instead
+    of an sklearn bundle; it is marked {"kind": "torch", ...} and routed to
+    window_predictions_torch() in build_timeline(). sklearn bundles are untouched by this branch
+    and keep working exactly as before (kind defaults to "sklearn").
+    """
+    path = Path(path)
+    if path.suffix == ".pt":
+        import torch
+        from src.recognize.nn_models import FeatureMLP
+
+        ckpt = torch.load(path, map_location="cpu")
+        model = FeatureMLP(n_in=ckpt["n_in"], n_classes=len(ckpt.get("classes", CLASSES)))
+        model.load_state_dict(ckpt["state_dict"])
+        model.eval()
+        ctx_k = int(ckpt.get("ctx_k", 2))
+        return {"kind": "torch", "model": model,
+                "feature_mask": np.array(ckpt["feature_mask"], dtype=bool),
+                "ctx_k": ctx_k, "ctx_gap_sec": float(ckpt.get("ctx_gap_sec", 90.0)),
+                "classes": ckpt.get("classes", CLASSES), "subset": "noori", "context": ctx_k}
+
     bundle = joblib.load(path)
-    return bundle if isinstance(bundle, dict) else {"model": bundle, "mask": None, "context": 1}
+    bundle = bundle if isinstance(bundle, dict) else {"model": bundle, "mask": None, "context": 1}
+    bundle.setdefault("kind", "sklearn")
+    return bundle
+
+
+# ------------------------------------------------------------------ torch (FeatureMLP+context) inference
+def _add_minute_context(reprs: np.ndarray, bucket_start: np.ndarray, gap_sec: float, k: int) -> np.ndarray:
+    """Mean of up to k minute-buckets before/after, blocked by a gap > gap_sec -- the live-inference
+    equivalent of scripts/train_mlp_context.py's add_context(), for one continuous run of buckets."""
+    n = len(reprs)
+    ctx = np.empty_like(reprs)
+    for pos in range(n):
+        neigh = []
+        p = pos
+        for _ in range(k):
+            if p == 0 or bucket_start[p] - bucket_start[p - 1] > gap_sec:
+                break
+            p -= 1; neigh.append(p)
+        p = pos
+        for _ in range(k):
+            if p == n - 1 or bucket_start[p + 1] - bucket_start[p] > gap_sec:
+                break
+            p += 1; neigh.append(p)
+        ctx[pos] = reprs[neigh].mean(0) if neigh else reprs[pos]
+    return ctx
+
+
+BURST_CONTEXT = 7   # sliding windows aggregated to emulate one ~20 s ExtraSensory burst; matches
+                     # scripts/train_classifier.py's CONTEXT, which RF/HGB's own `context` bundle field already uses
+
+
+def window_predictions_torch(df: pd.DataFrame, bundle: dict, burst_context: int = BURST_CONTEXT) -> pd.DataFrame:
+    """
+    Inference for a PyTorch FeatureMLP(+context) bundle, predicting per analysis window (same
+    granularity as the sklearn path) so merge_windows()/split_on_gaps() need no changes.
+
+    Two different context windows are involved, matching what the model actually saw in
+    training, not conflated into one:
+      * "own" 302-dim features: a short (~burst_context windows, ~17.5 s) sliding aggregation --
+        the SAME _context_features() trick window_predictions() already uses for RF/HGB to
+        emulate one ExtraSensory ~20 s burst. Using a longer span here (e.g. a flat 60 s
+        average) would shift the feature distribution far enough that the model's BatchNorm
+        layers (fit on the true ~20 s-burst distribution) produce near-garbage output -- this is
+        exactly the bug an initial 60 s-bucket version of this function had.
+      * "context" 302-dim features: the genuine multi-minute innovation -- the mean of up to
+        ctx_k *other, ~60 s-scale* minute-buckets' own-vectors before/after (gap-blocked), mirroring
+        add_context() in scripts/train_mlp_context.py. Only this half uses minute-scale bucketing;
+        each window keeps its own correctly-scaled own-vector.
+    """
+    import torch
+
+    model = bundle["model"]
+    mask151 = bundle["feature_mask"][: len(bundle["feature_mask"]) // 2]   # feature_mask = concat([mask, mask])
+    ctx_k, ctx_gap = bundle["ctx_k"], bundle["ctx_gap_sec"]
+
+    out_rows: list[dict] = []
+    chunk_data = []   # (own_per_window, ctx_per_window) per chunk; context never crosses a chunk gap
+    for chunk in split_chunks(df):
+        grid, X = resample_chunk(chunk)
+        if len(X) < WIN // 2:
+            continue
+        rows, F, starts = [], [], []
+        for s, w in windows(X):
+            F.append(window_features(w))
+            starts.append(float(grid[s]))
+            rows.append({"start": float(grid[s]), "end": float(grid[min(s + WIN, len(grid)) - 1]) + 1 / HZ,
+                         **{f"sig_{k}": v for k, v in signal_summary(w).items()}})
+        F = np.nan_to_num(np.stack(F), nan=0.0, posinf=0.0, neginf=0.0)[:, mask151]
+        starts = np.array(starts)
+        own_per_window = _context_features(F, burst_context)      # (n_windows, 302), RF-matching scale
+
+        bucket = np.floor(starts / 60.0).astype(int)
+        uniq = np.unique(bucket)
+        bucket_repr = np.stack([own_per_window[bucket == b].mean(0) for b in uniq])
+        bucket_start = np.array([starts[bucket == b].min() for b in uniq])
+        bucket_ctx = _add_minute_context(bucket_repr, bucket_start, ctx_gap, ctx_k)
+        ctx_per_window = bucket_ctx[np.searchsorted(uniq, bucket)]
+
+        out_rows += rows
+        chunk_data.append((own_per_window, ctx_per_window))
+    if not out_rows:
+        return pd.DataFrame()
+
+    all_probs = []
+    for own_per_window, ctx_per_window in chunk_data:
+        Xc = np.hstack([own_per_window, ctx_per_window]).astype(np.float32)
+        with torch.no_grad():
+            probs = torch.softmax(model(torch.tensor(Xc, dtype=torch.float32)), dim=1).numpy()
+        all_probs.append(probs)
+    P = np.vstack(all_probs)
+
+    out = pd.DataFrame(out_rows)
+    for i, c in enumerate(CLASSES):
+        out[f"p_{c}"] = P[:, i]
+    return out
 
 
 def build_timeline(recording: str | Path | pd.DataFrame, model_path: str | Path | None = None,
@@ -321,7 +437,10 @@ def build_timeline(recording: str | Path | pd.DataFrame, model_path: str | Path 
     if bursty:
         recording_sec = max(recording_sec, float(split_chunks(df)[-1]["t"].iloc[0]) + period)
 
-    wdf = window_predictions(df, bundle, whole_chunk=bursty)
+    if bundle.get("kind") == "torch":
+        wdf = window_predictions_torch(df, bundle)
+    else:
+        wdf = window_predictions(df, bundle, whole_chunk=bursty)
     # in a bursty recording the natural unit is one burst period, so an "episode" shorter than
     # that cannot be resolved; for a continuous stream keep the 10 s default.
     min_ep = max(MIN_EPISODE_SEC, 1.5 * period) if bursty else MIN_EPISODE_SEC

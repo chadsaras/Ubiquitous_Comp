@@ -1,0 +1,66 @@
+Query: "What activity is the user performing?"
+Answer: Lying Down
+Activity/Event: Lying Down
+Evidence:
+  Timestamp(s): 0 to 123, 133 to 180, 195 to 227, 284 to 299, 1266 to 1338, 1358 to 1432, 1445 to 1698, 1745 to 1767, 1782 to 2146, 2159 to 2509, 2526 to 2843, 2866 to 2890, 2903 to 3858, 3870 to 4088, 4106 to 4126, 4150 to 4371, 4381 to 4552, 4562 to 4656, 4671 to 5180, 5197 to 5276, 5286 to 5308, 5323 to 5378, 5410 to 5440, 5492 to 5532, 5554 to 6072, 6087 to 6390, 6402 to 7012, 7025 to 7662, 7677 to 7865, 7883 to 8005, 9281 to 9299, 9366 to 9376, 9425 to 9539, 9557 to 9629, 9639 to 9687 (seconds from start)
+  Sensor Modality: Accelerometer, Gyroscope
+  Sensor Channel(s): All
+Explanation: The dominant activity across the recording was lying down, detected for a total of 6749 seconds across 35 episode(s).
+
+============================================================
+
+Query: "Is the user walking?"
+Answer: Yes
+Activity/Event: Walking
+Evidence:
+  Timestamp(s): 9125 to 9135, 9145 to 9281 (seconds from start)
+  Sensor Modality: Accelerometer, Gyroscope
+  Sensor Channel(s): All
+Explanation: The sensor evidence supports the activity of walking because the acceleration variance (acc_mag_std) is near the typical range (0.1-0.15 g), indicating smooth, low-impact motion typical of walking. The cadence (2.7 Hz) is also within the usual range (1.8-2.2 Hz), further confirming the walking activity. The gyroscope angular velocity (gyro_mag_std) is low, suggesting minimal rotational motion typical of walking. The acceleration range (acc_range) is moderate, consistent with the typical walking pattern.
+
+============================================================
+
+Query: "How long was the user walking?"
+Answer: 146 seconds
+Activity/Event: Walking
+Evidence:
+  Timestamp(s): 9125 to 9135, 9145 to 9281 (seconds from start)
+  Sensor Modality: Accelerometer, Gyroscope
+  Sensor Channel(s): All
+Explanation: Walking was detected in 2 separate intervals, of 10, 136 seconds, which sum to 146 seconds.
+
+============================================================
+
+Query: "How many times did she walk?"
+Answer: 2 episodes
+Activity/Event: Walking
+Evidence:
+  Timestamp(s): 9125 to 9135, 9145 to 9281 (seconds from start)
+  Sensor Modality: Accelerometer, Gyroscope
+  Sensor Channel(s): All
+Explanation: The user engaged in walking across 2 distinct episode(s).
+
+============================================================
+
+Query: "Did the user begin walking at any point, and if so, when?"
+Answer: Yes, walking began at 9125 seconds
+Activity/Event: Onset of walking
+Evidence:
+  Timestamp(s): 9125 to 9135 (seconds from start)
+  Sensor Modality: Accelerometer, Gyroscope
+  Sensor Channel(s): All
+Explanation: The sensor evidence supports the activity decision of walking because the acceleration variance (acc_mag_std = 0.110 g) is within the typical range, indicating smooth, steady motion typical of walking at a cadence of 2.0 Hz. The gyroscope angular velocity (gyro_mag_std = 0.072 rad/s) is also within the typical range, suggesting sustained periodic motion typical of walking. The acceleration range (acc_range = 0.415 g) is also within the typical range, indicating a smooth, low-impact motion typical of walking.
+
+============================================================
+
+Query: "Did the user spend more time walking or sitting?"
+Answer: Sitting
+Activity/Event: Walking, Sitting
+Evidence:
+  Timestamp(s): Walking = 146 seconds total, Sitting = 2089 seconds total
+  Sensor Modality: Accelerometer, Gyroscope
+  Sensor Channel(s): All
+Explanation: Total sitting time (2089 seconds) exceeded total walking time (146 seconds) over the recording.
+
+============================================================
+
