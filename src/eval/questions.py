@@ -37,6 +37,23 @@ def pretty(act: str) -> str:
     return act.replace("_", " ")
 
 
+# Base verb form, so count questions read as English. "How many times did the user sitting?" is
+# ungrammatical and would neither look credible in the report nor test a realistic phrasing.
+VERB = {
+    "lying_down": "lie down",
+    "sitting": "sit",
+    "standing_in_place": "stand in place",
+    "standing_and_moving": "stand and move",
+    "walking": "walk",
+    "running": "run",
+    "bicycling": "cycle",
+}
+
+
+def verb(act: str) -> str:
+    return VERB.get(act, pretty(act))
+
+
 def build_questions(recording_id: str, intervals: list[dict]) -> list[dict]:
     """
     -> [{id, recording, type, question, truth_answer, truth_intervals, truth_value, ...}]
@@ -57,10 +74,16 @@ def build_questions(recording_id: str, intervals: list[dict]) -> list[dict]:
     if not present:
         return qs
 
-    # ---- identification: the activity occupying the most time in the reference labels
+    # ---- identification: the activity occupying the most time in the reference labels.
+    # Asked in several phrasings, both to raise the sample size (one question per recording left
+    # this type at n=12, where a single answer moved the reported accuracy by 8 points) and to
+    # check the answer does not depend on how the question happens to be worded.
     dominant = max(present, key=lambda a: _total(present[a]))
-    add("identification", "What activity is the user performing?",
-        truth_answer=dominant, truth_intervals=_pairs(present[dominant]))
+    for phrasing in ("What activity is the user performing?",
+                     "What was the user doing?",
+                     "Which activity dominates this recording?"):
+        add("identification", phrasing,
+            truth_answer=dominant, truth_intervals=_pairs(present[dominant]))
 
     # ---- verification: one activity that DID occur and one that did NOT (the negative case is
     #      what makes specificity meaningful -- the brief warns plain accuracy hides a "no" bias)
@@ -79,13 +102,20 @@ def build_questions(recording_id: str, intervals: list[dict]) -> list[dict]:
     for a in sorted(present, key=lambda x: -_total(present[x]))[:3]:
         add("duration", f"How long was the user {pretty(a)}?",
             truth_value=_total(present[a]), truth_activity=a, truth_intervals=_pairs(present[a]))
-        add("count", f"How many times did the user {pretty(a)}?",
+        add("count", f"How many times did the user {verb(a)}?",
             truth_value=float(len(present[a])), truth_activity=a, truth_intervals=_pairs(present[a]))
 
-    # ---- comparison between the two most common activities
+    # ---- comparison: the top two activities, and a second pair where one is much rarer, so the
+    # type is not measured solely on the easy "dominant vs runner-up" case.
     ranked = sorted(present, key=lambda x: -_total(present[x]))
+    pairs_to_ask = []
     if len(ranked) >= 2:
-        a, b = ranked[0], ranked[1]
+        pairs_to_ask.append((ranked[0], ranked[1]))
+    if len(ranked) >= 3:
+        pairs_to_ask.append((ranked[0], ranked[-1]))
+    if len(ranked) >= 4:
+        pairs_to_ask.append((ranked[1], ranked[2]))
+    for a, b in pairs_to_ask:
         winner = a if _total(present[a]) >= _total(present[b]) else b
         add("comparison", f"Did the user spend more time {pretty(a)} or {pretty(b)}?",
             truth_answer=winner, truth_intervals=_pairs(present[winner]))

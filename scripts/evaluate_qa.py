@@ -57,6 +57,9 @@ def score_one(q: dict, block, truth_intervals_raw: list[dict]) -> dict:
     pred_ivs = S.parse_intervals(block.timestamps)
     true_ivs = [tuple(x) for x in q.get("truth_intervals", [])]
     out = {"id": q["id"], "type": qtype, "question": q["question"],
+           # The exact text the system emits, stored verbatim rather than reconstructed, so the
+           # record shows precisely what a grader would receive in the challenge's output format.
+           "formatted_block": block.to_output_string(),
            "pred_answer": block.answer, "pred_activity": block.activity_event,
            "pred_timestamps": block.timestamps, "pred_modality": block.sensor_modality,
            "pred_channels": block.sensor_channels, "explanation": block.explanation,
@@ -162,9 +165,35 @@ def aggregate(rows: list[dict], iou_tau: float) -> dict:
                            and str(r["pred_channels"]).strip().upper() != "N/A")
     gp = [r["grounding_precision_hit"] for r in rows if r.get("grounding_precision_hit") is not None]
 
+    # Per-recording spread of the headline number. Users differ enormously in how hard they are
+    # (measured range 0.45-0.91), so a bare point estimate over a dozen users overstates how
+    # precisely the system is characterised. Reporting the interval is both more honest and more
+    # defensible than quoting one number.
+    by_rec: dict[str, list[dict]] = defaultdict(list)
+    for r in rows:
+        by_rec[r["id"].split("::")[0]].append(r)
+    per_rec_macro = []
+    for rs in by_rec.values():
+        t: dict[str, list[bool]] = defaultdict(list)
+        for r in rs:
+            t[r["type"]].append(bool(r.get("correct")))
+        if t:
+            per_rec_macro.append(sum(sum(v) / len(v) for v in t.values()) / len(t))
+    spread = None
+    if len(per_rec_macro) > 1:
+        mean = sum(per_rec_macro) / len(per_rec_macro)
+        var = sum((x - mean) ** 2 for x in per_rec_macro) / (len(per_rec_macro) - 1)
+        sd = var ** 0.5
+        ci = 1.96 * sd / len(per_rec_macro) ** 0.5
+        spread = {"n_recordings": len(per_rec_macro), "mean": mean, "sd": sd,
+                  "min": min(per_rec_macro), "max": max(per_rec_macro),
+                  "ci95_halfwidth": ci,
+                  "per_recording": sorted(round(x, 4) for x in per_rec_macro)}
+
     return {"per_type": per_type,
             "overall_qa_accuracy_macro": macro,
             "overall_qa_accuracy_micro": micro,
+            "per_recording_spread": spread,
             "n_questions": len(rows),
             "iou_threshold": iou_tau,
             "grounded_and_correct": (grounded_correct / len(grounded_rows)) if grounded_rows else None,
@@ -258,6 +287,11 @@ def main() -> None:
         miou = f"{e['mean_iou']:.3f}" if e.get("mean_iou") is not None else "-"
         print(f"{t:<16}{e['n']:>5}{e['accuracy']:>8.3f}{miou:>10}{extra:>28}")
     print(f"\nOVERALL QA accuracy (macro-averaged over types): {summary['overall_qa_accuracy_macro']:.3f}")
+    sp = summary.get("per_recording_spread")
+    if sp:
+        print(f"  across {sp['n_recordings']} held-out recordings: mean {sp['mean']:.3f} "
+              f"+/- {sp['ci95_halfwidth']:.3f} (95% CI), sd {sp['sd']:.3f}, "
+              f"range {sp['min']:.3f}-{sp['max']:.3f}")
     print(f"OVERALL QA accuracy (micro, all questions):      {summary['overall_qa_accuracy_micro']:.3f}")
     if summary["grounded_and_correct"] is not None:
         print(f"Grounded AND correct (IoU>={args.iou}):            {summary['grounded_and_correct']:.3f}"
