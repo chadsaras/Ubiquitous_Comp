@@ -552,9 +552,9 @@ The project was executed by Team \textbf{Klique} under a three-track parallel en
 \midrule
 \textbf{Saras Wagh} & \textbf{Track A Lead (Recognition \& Modeling):} Implemented 175-feature window extraction and 302-dim context pipeline (\texttt{src/recognize/features.py}); trained and evaluated Random Forest, HistGradientBoosting, TinyCNN, and FeatureMLP backbones; conducted feature ablation experiments (\texttt{results/ablation.csv}). \\
 \midrule
-\textbf{Hemant} & \textbf{Track A Co-Lead (Data \& Cloud Acceleration):} Built raw burst caching infrastructure (\texttt{scripts/build\_raw\_cache.py}); configured Kaggle cloud environment with NVIDIA Tesla T4 GPU; developed interactive training notebooks and executed 5-fold cross-validation for CNN+GRU. \\
+\textbf{Hemant} & \textbf{Track C Lead (Evaluation) \& Track A Co-Lead (Data \& Cloud Acceleration):} Built raw burst caching infrastructure (\texttt{scripts/build\_raw\_cache.py}); configured Kaggle cloud environment with NVIDIA Tesla T4 GPU; developed interactive training notebooks and executed 5-fold cross-validation for CNN+GRU; led benchmark evaluation harness execution (\texttt{scripts/evaluate\_qa.py}), scoring evaluation, and empirical metric validation across question types. \\
 \midrule
-\textbf{R Mohan Poornachandra} & \textbf{Track B \& C Lead (Aggregation, Query Layer, Evaluation \& Report):} Built ingestion engine and unit normalization (\texttt{load.py}); designed Contract 1 (\texttt{Timeline}) and Contract 2 (\texttt{FormattedAnswerBlock}); implemented 32-rule regex intent engine and Ollama Qwen 2.5 explainer (\texttt{src/query/}); developed 5-fold benchmark harness (\texttt{evaluate\_qa.py}), scoring rules, robustness sweeps, and authored technical report. \\
+\textbf{R Mohan Poornachandra} & \textbf{Track B Lead (Aggregation \& Query Layer) \& Track C Co-Lead (Evaluation \& Report):} Built ingestion engine and unit normalization (\texttt{load.py}); designed Contract 1 (\texttt{Timeline}) and Contract 2 (\texttt{FormattedAnswerBlock}); implemented 32-rule regex intent engine and Ollama Qwen 2.5 explainer (\texttt{src/query/}); co-developed 5-fold benchmark harness (\texttt{evaluate\_qa.py}), scoring rules, robustness sweeps, and authored technical report. \\
 \bottomrule
 \end{tabular}%
 }
@@ -597,10 +597,6 @@ A.~Bulling, U.~Blanke, and B.~Schiele.
 \newblock A tutorial on human activity recognition using body-worn inertial sensors.
 \newblock {\em ACM Computing Surveys (CSUR)}, 46(3):1--33, 2014.
 
-\bibitem{lara2012survey}
-O.~D. Lara and M.~A. Labrador.
-\newblock A survey on human activity recognition using wearable sensors.
-\newblock {\em IEEE Communications Surveys \& Tutorials}, 15(3):1192--1209, 2012.
 
 \bibitem{qwen2024}
 Qwen Team.
