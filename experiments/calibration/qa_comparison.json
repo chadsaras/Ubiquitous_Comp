@@ -1,0 +1,441 @@
+{
+  "model": "results/model_rf_fold0.joblib",
+  "n_recordings": 12,
+  "results": {
+    "baseline": {
+      "per_type": {
+        "identification": {
+          "n": 12,
+          "accuracy": 0.5,
+          "macro_f1": 0.2857142857142857,
+          "balanced_accuracy": 0.325,
+          "mean_iou": 0.6560982814760778,
+          "grounding_accuracy": 0.8333333333333334
+        },
+        "verification": {
+          "n": 36,
+          "accuracy": 0.9444444444444444,
+          "precision": 1.0,
+          "recall": 0.9166666666666666,
+          "f1": 0.9565217391304348,
+          "specificity": 1.0,
+          "tp": 22,
+          "fp": 0,
+          "fn": 2,
+          "tn": 12,
+          "mean_iou": 0.3648666297136649,
+          "grounding_accuracy": 0.375
+        },
+        "duration": {
+          "n": 36,
+          "accuracy": 0.16666666666666666,
+          "mae": 1334.5,
+          "mape": 92.18774463569173,
+          "unparseable": 0,
+          "mean_iou": 0.31917544927356306,
+          "grounding_accuracy": 0.3055555555555556
+        },
+        "count": {
+          "n": 36,
+          "accuracy": 0.3611111111111111,
+          "mae": 4.555555555555555,
+          "mape": 96.69714181969084,
+          "unparseable": 0,
+          "mean_iou": 0.31917544927356306,
+          "grounding_accuracy": 0.3055555555555556
+        },
+        "comparison": {
+          "n": 12,
+          "accuracy": 0.6666666666666666,
+          "macro_f1": 0.5178571428571428,
+          "balanced_accuracy": 0.625,
+          "mean_iou": 0.0,
+          "grounding_accuracy": 0.0
+        },
+        "grounding": {
+          "n": 36,
+          "accuracy": 0.9166666666666666,
+          "precision": 1.0,
+          "recall": 0.875,
+          "f1": 0.9333333333333333,
+          "specificity": 1.0,
+          "tp": 21,
+          "fp": 0,
+          "fn": 3,
+          "tn": 12,
+          "mean_iou": 0.17513757623511436,
+          "grounding_accuracy": 0.16666666666666666
+        },
+        "open_world": {
+          "n": 48,
+          "accuracy": 0.875,
+          "precision": 0.6842105263157895,
+          "recall": 1.0,
+          "f1": 0.8125000000000001,
+          "specificity": 0.8285714285714286,
+          "tp": 13,
+          "fp": 6,
+          "fn": 0,
+          "tn": 29,
+          "mean_iou": 0.5668914375626787,
+          "grounding_accuracy": 0.6153846153846154
+        }
+      },
+      "overall_qa_accuracy_macro": 0.6329365079365079,
+      "overall_qa_accuracy_micro": 0.6574074074074074,
+      "n_questions": 216,
+      "iou_threshold": 0.5,
+      "grounded_and_correct": 0.22929936305732485,
+      "n_grounded_scored": 157,
+      "grounding_precision": 0.4368932038834951
+    },
+    "prior_alpha_0.4_maxF1": {
+      "per_type": {
+        "identification": {
+          "n": 12,
+          "accuracy": 0.5833333333333334,
+          "macro_f1": 0.34134615384615385,
+          "balanced_accuracy": 0.3875,
+          "mean_iou": 0.6888787341946152,
+          "grounding_accuracy": 0.9166666666666666
+        },
+        "verification": {
+          "n": 36,
+          "accuracy": 0.9166666666666666,
+          "precision": 1.0,
+          "recall": 0.875,
+          "f1": 0.9333333333333333,
+          "specificity": 1.0,
+          "tp": 21,
+          "fp": 0,
+          "fn": 3,
+          "tn": 12,
+          "mean_iou": 0.35776384914025444,
+          "grounding_accuracy": 0.375
+        },
+        "duration": {
+          "n": 36,
+          "accuracy": 0.19444444444444445,
+          "mae": 1316.7222222222222,
+          "mape": 94.8078130925957,
+          "unparseable": 0,
+          "mean_iou": 0.3053080226241209,
+          "grounding_accuracy": 0.2777777777777778
+        },
+        "count": {
+          "n": 36,
+          "accuracy": 0.3055555555555556,
+          "mae": 4.527777777777778,
+          "mape": 96.80737109658679,
+          "unparseable": 0,
+          "mean_iou": 0.3053080226241209,
+          "grounding_accuracy": 0.2777777777777778
+        },
+        "comparison": {
+          "n": 12,
+          "accuracy": 0.75,
+          "macro_f1": 0.5814393939393939,
+          "balanced_accuracy": 0.6875,
+          "mean_iou": 0.0,
+          "grounding_accuracy": 0.0
+        },
+        "grounding": {
+          "n": 36,
+          "accuracy": 0.8611111111111112,
+          "precision": 1.0,
+          "recall": 0.7916666666666666,
+          "f1": 0.8837209302325582,
+          "specificity": 1.0,
+          "tp": 19,
+          "fp": 0,
+          "fn": 5,
+          "tn": 12,
+          "mean_iou": 0.20858631145301895,
+          "grounding_accuracy": 0.20833333333333334
+        },
+        "open_world": {
+          "n": 48,
+          "accuracy": 0.7916666666666666,
+          "precision": 0.5652173913043478,
+          "recall": 1.0,
+          "f1": 0.7222222222222222,
+          "specificity": 0.7142857142857143,
+          "tp": 13,
+          "fp": 10,
+          "fn": 0,
+          "tn": 25,
+          "mean_iou": 0.5649901763927694,
+          "grounding_accuracy": 0.6153846153846154
+        }
+      },
+      "overall_qa_accuracy_macro": 0.628968253968254,
+      "overall_qa_accuracy_micro": 0.6296296296296297,
+      "n_questions": 216,
+      "iou_threshold": 0.5,
+      "grounded_and_correct": 0.22929936305732485,
+      "n_grounded_scored": 157,
+      "grounding_precision": 0.44680851063829785
+    },
+    "prior_alpha_0.45_minTimeErr": {
+      "per_type": {
+        "identification": {
+          "n": 12,
+          "accuracy": 0.5833333333333334,
+          "macro_f1": 0.34134615384615385,
+          "balanced_accuracy": 0.3875,
+          "mean_iou": 0.6842417519494405,
+          "grounding_accuracy": 0.8333333333333334
+        },
+        "verification": {
+          "n": 36,
+          "accuracy": 0.9166666666666666,
+          "precision": 1.0,
+          "recall": 0.875,
+          "f1": 0.9333333333333333,
+          "specificity": 1.0,
+          "tp": 21,
+          "fp": 0,
+          "fn": 3,
+          "tn": 12,
+          "mean_iou": 0.35649511128124683,
+          "grounding_accuracy": 0.375
+        },
+        "duration": {
+          "n": 36,
+          "accuracy": 0.1111111111111111,
+          "mae": 1302.5833333333333,
+          "mape": 95.34874331111843,
+          "unparseable": 0,
+          "mean_iou": 0.28907919783954517,
+          "grounding_accuracy": 0.2777777777777778
+        },
+        "count": {
+          "n": 36,
+          "accuracy": 0.3333333333333333,
+          "mae": 4.472222222222222,
+          "mape": 101.94736227824463,
+          "unparseable": 0,
+          "mean_iou": 0.28907919783954517,
+          "grounding_accuracy": 0.2777777777777778
+        },
+        "comparison": {
+          "n": 12,
+          "accuracy": 0.75,
+          "macro_f1": 0.5814393939393939,
+          "balanced_accuracy": 0.6875,
+          "mean_iou": 0.0,
+          "grounding_accuracy": 0.0
+        },
+        "grounding": {
+          "n": 36,
+          "accuracy": 0.8611111111111112,
+          "precision": 1.0,
+          "recall": 0.7916666666666666,
+          "f1": 0.8837209302325582,
+          "specificity": 1.0,
+          "tp": 19,
+          "fp": 0,
+          "fn": 5,
+          "tn": 12,
+          "mean_iou": 0.1801614639765908,
+          "grounding_accuracy": 0.16666666666666666
+        },
+        "open_world": {
+          "n": 48,
+          "accuracy": 0.7916666666666666,
+          "precision": 0.5652173913043478,
+          "recall": 1.0,
+          "f1": 0.7222222222222222,
+          "specificity": 0.7142857142857143,
+          "tp": 13,
+          "fp": 10,
+          "fn": 0,
+          "tn": 25,
+          "mean_iou": 0.5649901763927694,
+          "grounding_accuracy": 0.6153846153846154
+        }
+      },
+      "overall_qa_accuracy_macro": 0.621031746031746,
+      "overall_qa_accuracy_micro": 0.6203703703703703,
+      "n_questions": 216,
+      "iou_threshold": 0.5,
+      "grounded_and_correct": 0.2229299363057325,
+      "n_grounded_scored": 157,
+      "grounding_precision": 0.42391304347826086
+    },
+    "coord_ascent_maxF1": {
+      "per_type": {
+        "identification": {
+          "n": 12,
+          "accuracy": 0.5833333333333334,
+          "macro_f1": 0.35416666666666663,
+          "balanced_accuracy": 0.3875,
+          "mean_iou": 0.6578886825230177,
+          "grounding_accuracy": 0.8333333333333334
+        },
+        "verification": {
+          "n": 36,
+          "accuracy": 0.9166666666666666,
+          "precision": 1.0,
+          "recall": 0.875,
+          "f1": 0.9333333333333333,
+          "specificity": 1.0,
+          "tp": 21,
+          "fp": 0,
+          "fn": 3,
+          "tn": 12,
+          "mean_iou": 0.32284493414492127,
+          "grounding_accuracy": 0.3333333333333333
+        },
+        "duration": {
+          "n": 36,
+          "accuracy": 0.1388888888888889,
+          "mae": 1213.7222222222222,
+          "mape": 85.02552844509842,
+          "unparseable": 0,
+          "mean_iou": 0.3129403797761201,
+          "grounding_accuracy": 0.2777777777777778
+        },
+        "count": {
+          "n": 36,
+          "accuracy": 0.3611111111111111,
+          "mae": 4.333333333333333,
+          "mape": 93.86314711069613,
+          "unparseable": 0,
+          "mean_iou": 0.3129403797761201,
+          "grounding_accuracy": 0.2777777777777778
+        },
+        "comparison": {
+          "n": 12,
+          "accuracy": 0.8333333333333334,
+          "macro_f1": 0.6994949494949495,
+          "balanced_accuracy": 0.75,
+          "mean_iou": 0.0,
+          "grounding_accuracy": 0.0
+        },
+        "grounding": {
+          "n": 36,
+          "accuracy": 0.8888888888888888,
+          "precision": 1.0,
+          "recall": 0.8333333333333334,
+          "f1": 0.9090909090909091,
+          "specificity": 1.0,
+          "tp": 20,
+          "fp": 0,
+          "fn": 4,
+          "tn": 12,
+          "mean_iou": 0.19851935810260382,
+          "grounding_accuracy": 0.20833333333333334
+        },
+        "open_world": {
+          "n": 48,
+          "accuracy": 0.7708333333333334,
+          "precision": 0.5454545454545454,
+          "recall": 0.9230769230769231,
+          "f1": 0.6857142857142856,
+          "specificity": 0.7142857142857143,
+          "tp": 12,
+          "fp": 10,
+          "fn": 1,
+          "tn": 25,
+          "mean_iou": 0.5308897861697863,
+          "grounding_accuracy": 0.6153846153846154
+        }
+      },
+      "overall_qa_accuracy_macro": 0.6418650793650793,
+      "overall_qa_accuracy_micro": 0.6342592592592593,
+      "n_questions": 216,
+      "iou_threshold": 0.5,
+      "grounded_and_correct": 0.21019108280254778,
+      "n_grounded_scored": 157,
+      "grounding_precision": 0.4639175257731959
+    },
+    "coord_ascent_minTimeErr": {
+      "per_type": {
+        "identification": {
+          "n": 12,
+          "accuracy": 0.5833333333333334,
+          "macro_f1": 0.34134615384615385,
+          "balanced_accuracy": 0.3875,
+          "mean_iou": 0.6828083696996412,
+          "grounding_accuracy": 0.8333333333333334
+        },
+        "verification": {
+          "n": 36,
+          "accuracy": 0.9166666666666666,
+          "precision": 1.0,
+          "recall": 0.875,
+          "f1": 0.9333333333333333,
+          "specificity": 1.0,
+          "tp": 21,
+          "fp": 0,
+          "fn": 3,
+          "tn": 12,
+          "mean_iou": 0.3521811803159187,
+          "grounding_accuracy": 0.375
+        },
+        "duration": {
+          "n": 36,
+          "accuracy": 0.1111111111111111,
+          "mae": 1281.8055555555557,
+          "mape": 104.0327513364168,
+          "unparseable": 0,
+          "mean_iou": 0.29867668576045303,
+          "grounding_accuracy": 0.2777777777777778
+        },
+        "count": {
+          "n": 36,
+          "accuracy": 0.3055555555555556,
+          "mae": 4.638888888888889,
+          "mape": 101.19780319535221,
+          "unparseable": 0,
+          "mean_iou": 0.29867668576045303,
+          "grounding_accuracy": 0.2777777777777778
+        },
+        "comparison": {
+          "n": 12,
+          "accuracy": 0.75,
+          "macro_f1": 0.5814393939393939,
+          "balanced_accuracy": 0.6875,
+          "mean_iou": 0.0,
+          "grounding_accuracy": 0.0
+        },
+        "grounding": {
+          "n": 36,
+          "accuracy": 0.8611111111111112,
+          "precision": 1.0,
+          "recall": 0.7916666666666666,
+          "f1": 0.8837209302325582,
+          "specificity": 1.0,
+          "tp": 19,
+          "fp": 0,
+          "fn": 5,
+          "tn": 12,
+          "mean_iou": 0.19705185459287364,
+          "grounding_accuracy": 0.16666666666666666
+        },
+        "open_world": {
+          "n": 48,
+          "accuracy": 0.7708333333333334,
+          "precision": 0.5416666666666666,
+          "recall": 1.0,
+          "f1": 0.7027027027027027,
+          "specificity": 0.6857142857142857,
+          "tp": 13,
+          "fp": 11,
+          "fn": 0,
+          "tn": 24,
+          "mean_iou": 0.5591939863540932,
+          "grounding_accuracy": 0.6153846153846154
+        }
+      },
+      "overall_qa_accuracy_macro": 0.6140873015873016,
+      "overall_qa_accuracy_micro": 0.6111111111111112,
+      "n_questions": 216,
+      "iou_threshold": 0.5,
+      "grounded_and_correct": 0.2229299363057325,
+      "n_grounded_scored": 157,
+      "grounding_precision": 0.4574468085106383
+    }
+  }
+}

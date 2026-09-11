@@ -1,0 +1,651 @@
+{
+  "fold": 0,
+  "trees": 300,
+  "seed": 0,
+  "users": {
+    "sub_train": 34,
+    "validation": 11,
+    "test": 12
+  },
+  "minutes": {
+    "train": 53946,
+    "val": 17928,
+    "test": 20394
+  },
+  "train_class_prior": {
+    "lying_down": 0.23640306973640307,
+    "sitting": 0.2509361213064917,
+    "standing_in_place": 0.08844029214399585,
+    "standing_and_moving": 0.1962332703073444,
+    "walking": 0.1680940199458718,
+    "running": 0.009602194787379973,
+    "bicycling": 0.050291031772513255
+  },
+  "candidates": {
+    "baseline_argmax": {
+      "weights": {
+        "lying_down": 1.0,
+        "sitting": 1.0,
+        "standing_in_place": 1.0,
+        "standing_and_moving": 1.0,
+        "walking": 1.0,
+        "running": 1.0,
+        "bicycling": 1.0
+      },
+      "validation": {
+        "accuracy": 0.46480365908076754,
+        "macro_f1": 0.36439621738741196,
+        "balanced_accuracy": 0.352127925913242,
+        "time_error": 0.3063364569388666,
+        "per_class": {
+          "lying_down": {
+            "precision": 0.4983108108108108,
+            "recall": 0.59,
+            "f1": 0.5402930402930403,
+            "true_minutes": 4000,
+            "predicted_minutes": 4736
+          },
+          "sitting": {
+            "precision": 0.42528550747949173,
+            "recall": 0.6284763489422391,
+            "f1": 0.5072908672294705,
+            "true_minutes": 4207,
+            "predicted_minutes": 6217
+          },
+          "standing_in_place": {
+            "precision": 0.18552875695732837,
+            "recall": 0.09345794392523364,
+            "f1": 0.12430080795525171,
+            "true_minutes": 1070,
+            "predicted_minutes": 539
+          },
+          "standing_and_moving": {
+            "precision": 0.24855252274607112,
+            "recall": 0.1868781094527363,
+            "f1": 0.21334753283635072,
+            "true_minutes": 3216,
+            "predicted_minutes": 2418
+          },
+          "walking": {
+            "precision": 0.6071743604822111,
+            "recall": 0.5019445794846864,
+            "f1": 0.5495675316034597,
+            "true_minutes": 4114,
+            "predicted_minutes": 3401
+          },
+          "running": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "true_minutes": 108,
+            "predicted_minutes": 2
+          },
+          "bicycling": {
+            "precision": 0.9154471544715447,
+            "recall": 0.46413849958779885,
+            "f1": 0.6159737417943107,
+            "true_minutes": 1213,
+            "predicted_minutes": 615
+          }
+        }
+      },
+      "test": {
+        "accuracy": 0.4918113170540355,
+        "macro_f1": 0.4290322956144152,
+        "balanced_accuracy": 0.41281114253491513,
+        "time_error": 0.43473570658036675,
+        "per_class": {
+          "lying_down": {
+            "precision": 0.5148367952522255,
+            "recall": 0.6767430521696733,
+            "f1": 0.5847903939330104,
+            "true_minutes": 4102,
+            "predicted_minutes": 5392
+          },
+          "sitting": {
+            "precision": 0.4011342155009452,
+            "recall": 0.6642320534223706,
+            "f1": 0.5001964327807025,
+            "true_minutes": 4792,
+            "predicted_minutes": 7935
+          },
+          "standing_in_place": {
+            "precision": 0.1980440097799511,
+            "recall": 0.03916827852998066,
+            "f1": 0.06540169559951554,
+            "true_minutes": 2068,
+            "predicted_minutes": 409
+          },
+          "standing_and_moving": {
+            "precision": 0.24470338983050846,
+            "recall": 0.14124121063894834,
+            "f1": 0.1791044776119403,
+            "true_minutes": 3271,
+            "predicted_minutes": 1888
+          },
+          "walking": {
+            "precision": 0.7315882874889086,
+            "recall": 0.5795115094008083,
+            "f1": 0.6467300715756447,
+            "true_minutes": 5691,
+            "predicted_minutes": 4508
+          },
+          "running": {
+            "precision": 0.8571428571428571,
+            "recall": 0.1951219512195122,
+            "f1": 0.31788079470198677,
+            "true_minutes": 123,
+            "predicted_minutes": 28
+          },
+          "bicycling": {
+            "precision": 0.8803418803418803,
+            "recall": 0.5936599423631124,
+            "f1": 0.7091222030981067,
+            "true_minutes": 347,
+            "predicted_minutes": 234
+          }
+        }
+      }
+    },
+    "prior_alpha_0.4_maxF1": {
+      "weights": {
+        "lying_down": 0.6283258438825903,
+        "sitting": 0.6135089398511131,
+        "standing_in_place": 0.9310780759254818,
+        "standing_and_moving": 0.6769196343929424,
+        "walking": 0.7201538096804558,
+        "running": 2.2630698730733183,
+        "bicycling": 1.1669438231940976
+      },
+      "validation": {
+        "accuracy": 0.4569946452476573,
+        "macro_f1": 0.3743399055790733,
+        "balanced_accuracy": 0.3658380322495872,
+        "time_error": 0.22333779562695225,
+        "per_class": {
+          "lying_down": {
+            "precision": 0.5045239121068505,
+            "recall": 0.5855,
+            "f1": 0.5420041657023837,
+            "true_minutes": 4000,
+            "predicted_minutes": 4642
+          },
+          "sitting": {
+            "precision": 0.4430660988705795,
+            "recall": 0.5688138816258617,
+            "f1": 0.49812656119900084,
+            "true_minutes": 4207,
+            "predicted_minutes": 5401
+          },
+          "standing_in_place": {
+            "precision": 0.16666666666666666,
+            "recall": 0.1925233644859813,
+            "f1": 0.17866435385949697,
+            "true_minutes": 1070,
+            "predicted_minutes": 1236
+          },
+          "standing_and_moving": {
+            "precision": 0.23748974569319115,
+            "recall": 0.18003731343283583,
+            "f1": 0.20481075344888575,
+            "true_minutes": 3216,
+            "predicted_minutes": 2438
+          },
+          "walking": {
+            "precision": 0.6085904416212946,
+            "recall": 0.4890617403986388,
+            "f1": 0.5423180592991914,
+            "true_minutes": 4114,
+            "predicted_minutes": 3306
+          },
+          "running": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "true_minutes": 108,
+            "predicted_minutes": 98
+          },
+          "bicycling": {
+            "precision": 0.8190830235439901,
+            "recall": 0.5449299258037923,
+            "f1": 0.6544554455445545,
+            "true_minutes": 1213,
+            "predicted_minutes": 807
+          }
+        }
+      },
+      "test": {
+        "accuracy": 0.48072962636069433,
+        "macro_f1": 0.4317669720920922,
+        "balanced_accuracy": 0.4500346829043183,
+        "time_error": 0.349416495047563,
+        "per_class": {
+          "lying_down": {
+            "precision": 0.5105026256564141,
+            "recall": 0.6635787420770356,
+            "f1": 0.577061691753233,
+            "true_minutes": 4102,
+            "predicted_minutes": 5332
+          },
+          "sitting": {
+            "precision": 0.4159954783100184,
+            "recall": 0.6143572621035058,
+            "f1": 0.49608223102199006,
+            "true_minutes": 4792,
+            "predicted_minutes": 7077
+          },
+          "standing_in_place": {
+            "precision": 0.17553956834532375,
+            "recall": 0.11798839458413926,
+            "f1": 0.14112203585887798,
+            "true_minutes": 2068,
+            "predicted_minutes": 1390
+          },
+          "standing_and_moving": {
+            "precision": 0.22228879568603954,
+            "recall": 0.11342097217976153,
+            "f1": 0.15020242914979756,
+            "true_minutes": 3271,
+            "predicted_minutes": 1669
+          },
+          "walking": {
+            "precision": 0.7345372460496614,
+            "recall": 0.5717800035143209,
+            "f1": 0.6430194644797945,
+            "true_minutes": 5691,
+            "predicted_minutes": 4430
+          },
+          "running": {
+            "precision": 0.32748538011695905,
+            "recall": 0.45528455284552843,
+            "f1": 0.38095238095238093,
+            "true_minutes": 123,
+            "predicted_minutes": 171
+          },
+          "bicycling": {
+            "precision": 0.6553846153846153,
+            "recall": 0.6138328530259366,
+            "f1": 0.6339285714285714,
+            "true_minutes": 347,
+            "predicted_minutes": 325
+          }
+        }
+      }
+    },
+    "prior_alpha_0.45_minTimeErr": {
+      "weights": {
+        "lying_down": 0.5824893649174187,
+        "sitting": 0.5670592893405945,
+        "standing_in_place": 0.9066492880056046,
+        "standing_and_moving": 0.6334089738149404,
+        "walking": 0.6790994553144334,
+        "running": 2.4624372394927687,
+        "bicycling": 1.168856389114239
+      },
+      "validation": {
+        "accuracy": 0.4539825970548862,
+        "macro_f1": 0.37387734398031786,
+        "balanced_accuracy": 0.3661054576976723,
+        "time_error": 0.22322623828647925,
+        "per_class": {
+          "lying_down": {
+            "precision": 0.5063756213529285,
+            "recall": 0.58575,
+            "f1": 0.5431783934160195,
+            "true_minutes": 4000,
+            "predicted_minutes": 4627
+          },
+          "sitting": {
+            "precision": 0.44267274107820803,
+            "recall": 0.5543142381744711,
+            "f1": 0.4922427440633245,
+            "true_minutes": 4207,
+            "predicted_minutes": 5268
+          },
+          "standing_in_place": {
+            "precision": 0.16244411326378538,
+            "recall": 0.20373831775700935,
+            "f1": 0.18076285240464346,
+            "true_minutes": 1070,
+            "predicted_minutes": 1342
+          },
+          "standing_and_moving": {
+            "precision": 0.23379819524200163,
+            "recall": 0.17723880597014927,
+            "f1": 0.20162716660771135,
+            "true_minutes": 3216,
+            "predicted_minutes": 2438
+          },
+          "walking": {
+            "precision": 0.6131007040097949,
+            "recall": 0.48687408847836655,
+            "f1": 0.5427448855168676,
+            "true_minutes": 4114,
+            "predicted_minutes": 3267
+          },
+          "running": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "true_minutes": 108,
+            "predicted_minutes": 149
+          },
+          "bicycling": {
+            "precision": 0.8040621266427718,
+            "recall": 0.5548227535037098,
+            "f1": 0.6565853658536586,
+            "true_minutes": 1213,
+            "predicted_minutes": 837
+          }
+        }
+      },
+      "test": {
+        "accuracy": 0.4780817887614004,
+        "macro_f1": 0.4234610505319103,
+        "balanced_accuracy": 0.45215261613830054,
+        "time_error": 0.3393154849465529,
+        "per_class": {
+          "lying_down": {
+            "precision": 0.5101694915254237,
+            "recall": 0.6604095563139932,
+            "f1": 0.5756481087972801,
+            "true_minutes": 4102,
+            "predicted_minutes": 5310
+          },
+          "sitting": {
+            "precision": 0.41865822055859486,
+            "recall": 0.6068447412353923,
+            "f1": 0.49548475038337025,
+            "true_minutes": 4792,
+            "predicted_minutes": 6946
+          },
+          "standing_in_place": {
+            "precision": 0.1761327377153797,
+            "recall": 0.13346228239845262,
+            "f1": 0.1518569463548831,
+            "true_minutes": 2068,
+            "predicted_minutes": 1567
+          },
+          "standing_and_moving": {
+            "precision": 0.21886559802712702,
+            "recall": 0.10852950168144299,
+            "f1": 0.14510525240138974,
+            "true_minutes": 3271,
+            "predicted_minutes": 1622
+          },
+          "walking": {
+            "precision": 0.7371063441350981,
+            "recall": 0.5675628184853277,
+            "f1": 0.6413183758562494,
+            "true_minutes": 5691,
+            "predicted_minutes": 4382
+          },
+          "running": {
+            "precision": 0.26244343891402716,
+            "recall": 0.4715447154471545,
+            "f1": 0.3372093023255814,
+            "true_minutes": 123,
+            "predicted_minutes": 221
+          },
+          "bicycling": {
+            "precision": 0.6184971098265896,
+            "recall": 0.6167146974063401,
+            "f1": 0.6176046176046176,
+            "true_minutes": 347,
+            "predicted_minutes": 346
+          }
+        }
+      }
+    },
+    "coord_ascent_maxF1": {
+      "weights": {
+        "lying_down": 1.25,
+        "sitting": 1.0,
+        "standing_in_place": 1.5625,
+        "standing_and_moving": 1.25,
+        "walking": 0.8,
+        "running": 0.25,
+        "bicycling": 2.0
+      },
+      "validation": {
+        "accuracy": 0.45822177599286035,
+        "macro_f1": 0.3800090996981292,
+        "balanced_accuracy": 0.3731845757661607,
+        "time_error": 0.249888442659527,
+        "per_class": {
+          "lying_down": {
+            "precision": 0.4855706572332899,
+            "recall": 0.652,
+            "f1": 0.5566108206167965,
+            "true_minutes": 4000,
+            "predicted_minutes": 5371
+          },
+          "sitting": {
+            "precision": 0.4721479500891266,
+            "recall": 0.503684335631091,
+            "f1": 0.4874065554916619,
+            "true_minutes": 4207,
+            "predicted_minutes": 4488
+          },
+          "standing_in_place": {
+            "precision": 0.15609756097560976,
+            "recall": 0.17943925233644858,
+            "f1": 0.16695652173913045,
+            "true_minutes": 1070,
+            "predicted_minutes": 1230
+          },
+          "standing_and_moving": {
+            "precision": 0.2557628979143798,
+            "recall": 0.2898009950248756,
+            "f1": 0.2717201166180758,
+            "true_minutes": 3216,
+            "predicted_minutes": 3644
+          },
+          "walking": {
+            "precision": 0.7357651245551602,
+            "recall": 0.40204180845892074,
+            "f1": 0.5199622760138322,
+            "true_minutes": 4114,
+            "predicted_minutes": 2248
+          },
+          "running": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "true_minutes": 108,
+            "predicted_minutes": 0
+          },
+          "bicycling": {
+            "precision": 0.7497360084477297,
+            "recall": 0.5853256389117889,
+            "f1": 0.6574074074074074,
+            "true_minutes": 1213,
+            "predicted_minutes": 947
+          }
+        }
+      },
+      "test": {
+        "accuracy": 0.4629793076395018,
+        "macro_f1": 0.3823915886976872,
+        "balanced_accuracy": 0.3947488833116096,
+        "time_error": 0.3317642443856036,
+        "per_class": {
+          "lying_down": {
+            "precision": 0.49336139896373055,
+            "recall": 0.7428083861530961,
+            "f1": 0.5929169099046507,
+            "true_minutes": 4102,
+            "predicted_minutes": 6176
+          },
+          "sitting": {
+            "precision": 0.44042659556740543,
+            "recall": 0.5515442404006677,
+            "f1": 0.48976188270175114,
+            "true_minutes": 4792,
+            "predicted_minutes": 6001
+          },
+          "standing_in_place": {
+            "precision": 0.17854518736223365,
+            "recall": 0.11750483558994197,
+            "f1": 0.14173228346456693,
+            "true_minutes": 2068,
+            "predicted_minutes": 1361
+          },
+          "standing_and_moving": {
+            "precision": 0.21599496221662468,
+            "recall": 0.20972179761540813,
+            "f1": 0.21281216069489686,
+            "true_minutes": 3271,
+            "predicted_minutes": 3176
+          },
+          "walking": {
+            "precision": 0.8053316800991941,
+            "recall": 0.4565102793885082,
+            "f1": 0.5827071885163172,
+            "true_minutes": 5691,
+            "predicted_minutes": 3226
+          },
+          "running": {
+            "precision": 1.0,
+            "recall": 0.056910569105691054,
+            "f1": 0.1076923076923077,
+            "true_minutes": 123,
+            "predicted_minutes": 7
+          },
+          "bicycling": {
+            "precision": 0.48769574944071586,
+            "recall": 0.6282420749279539,
+            "f1": 0.5491183879093199,
+            "true_minutes": 347,
+            "predicted_minutes": 447
+          }
+        }
+      }
+    },
+    "coord_ascent_minTimeErr": {
+      "weights": {
+        "lying_down": 0.8,
+        "sitting": 0.8,
+        "standing_in_place": 1.25,
+        "standing_and_moving": 1.0,
+        "walking": 1.25,
+        "running": 3.75,
+        "bicycling": 3.0
+      },
+      "validation": {
+        "accuracy": 0.4506916555109326,
+        "macro_f1": 0.36741754425839385,
+        "balanced_accuracy": 0.36669757023058136,
+        "time_error": 0.09393128067826863,
+        "per_class": {
+          "lying_down": {
+            "precision": 0.5196557338916027,
+            "recall": 0.5585,
+            "f1": 0.5383781178455236,
+            "true_minutes": 4000,
+            "predicted_minutes": 4299
+          },
+          "sitting": {
+            "precision": 0.45242105263157895,
+            "recall": 0.5108153078202995,
+            "f1": 0.4798481634475829,
+            "true_minutes": 4207,
+            "predicted_minutes": 4750
+          },
+          "standing_in_place": {
+            "precision": 0.16684491978609625,
+            "recall": 0.14579439252336449,
+            "f1": 0.15561097256857856,
+            "true_minutes": 1070,
+            "predicted_minutes": 935
+          },
+          "standing_and_moving": {
+            "precision": 0.21827242524916943,
+            "recall": 0.2042910447761194,
+            "f1": 0.21105043366527465,
+            "true_minutes": 3216,
+            "predicted_minutes": 3010
+          },
+          "walking": {
+            "precision": 0.5805212620027435,
+            "recall": 0.5143412736995625,
+            "f1": 0.5454311122567341,
+            "true_minutes": 4114,
+            "predicted_minutes": 3645
+          },
+          "running": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "true_minutes": 108,
+            "predicted_minutes": 108
+          },
+          "bicycling": {
+            "precision": 0.6502963590177815,
+            "recall": 0.6331409727947238,
+            "f1": 0.6416040100250626,
+            "true_minutes": 1213,
+            "predicted_minutes": 1181
+          }
+        }
+      },
+      "test": {
+        "accuracy": 0.4714131607335491,
+        "macro_f1": 0.39670200569314573,
+        "balanced_accuracy": 0.4429963612290235,
+        "time_error": 0.3003824654310091,
+        "per_class": {
+          "lying_down": {
+            "precision": 0.512076353720296,
+            "recall": 0.6409068746952706,
+            "f1": 0.5692940666955392,
+            "true_minutes": 4102,
+            "predicted_minutes": 5134
+          },
+          "sitting": {
+            "precision": 0.42356933518432827,
+            "recall": 0.5730383973288815,
+            "f1": 0.48709534368070956,
+            "true_minutes": 4792,
+            "predicted_minutes": 6483
+          },
+          "standing_in_place": {
+            "precision": 0.1764159702878366,
+            "recall": 0.09187620889748549,
+            "f1": 0.12082670906200318,
+            "true_minutes": 2068,
+            "predicted_minutes": 1077
+          },
+          "standing_and_moving": {
+            "precision": 0.1901081916537867,
+            "recall": 0.11280953836747172,
+            "f1": 0.14159631619339985,
+            "true_minutes": 3271,
+            "predicted_minutes": 1941
+          },
+          "walking": {
+            "precision": 0.6874115983026874,
+            "recall": 0.5977859778597786,
+            "f1": 0.6394736842105263,
+            "true_minutes": 5691,
+            "predicted_minutes": 4949
+          },
+          "running": {
+            "precision": 0.30857142857142855,
+            "recall": 0.43902439024390244,
+            "f1": 0.3624161073825503,
+            "true_minutes": 123,
+            "predicted_minutes": 175
+          },
+          "bicycling": {
+            "precision": 0.352755905511811,
+            "recall": 0.6455331412103746,
+            "f1": 0.45621181262729127,
+            "true_minutes": 347,
+            "predicted_minutes": 635
+          }
+        }
+      }
+    }
+  }
+}
