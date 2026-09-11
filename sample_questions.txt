@@ -1,0 +1,27 @@
+# Sample questions covering all four tiers of the challenge.
+# Run with:
+#   python src/pipeline.py --recording <recording.csv> --questions sample_questions.txt
+# Lines starting with '#' are ignored.
+
+# --- Task 1: activity identification (open + binary verification)
+What activity is the user performing?
+Is the user walking?
+Was the user running?
+Did the grandmother take a quick jog in the park?
+
+# --- Task 2: temporal and quantitative reasoning
+How long was the user walking?
+How much of the recording did she spend sitting?
+How many times did the user walk?
+When did the user begin walking?
+Did the user spend more time walking or sitting?
+
+# --- Task 3: evidence grounding
+Did the user begin running at any point, and if so, when?
+Did the user begin bicycling at any point, and if so, when?
+
+# --- Task 4: open-world reasoning
+Did the user lie down for a prolonged period?
+Did the user spend a prolonged period resting?
+Was the user using a wheeled or pedal-based mode of movement?
+Was the user doing anything strenuous?

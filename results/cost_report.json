@@ -1,0 +1,131 @@
+{
+  "target_device": {
+    "os": "Windows 11",
+    "python": "3.12.2",
+    "machine": "AMD64",
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "gpu_used": false,
+    "cpu_physical_cores": 6,
+    "cpu_logical_cores": 12,
+    "ram_total_gb": 6.3
+  },
+  "note": "CPU only; no GPU used at any stage of the deployed pipeline.",
+  "recognizer": {
+    "file": "results\\model_rf.joblib",
+    "disk_bytes": 234089878,
+    "disk_mb": 234.09,
+    "n_estimators": 300,
+    "total_tree_nodes": 5959242,
+    "parameter_proxy": 5959242,
+    "parameter_note": "decision-tree nodes; a forest has no weights, so node count is the comparable capacity measure",
+    "n_features_in": 302
+  },
+  "slm": {
+    "model": "qwen2.5:1.5b",
+    "disk_bytes": 986061892,
+    "disk_mb": 986.1,
+    "parameters": "1.5B",
+    "quantization": "Q4_K_M",
+    "context_length": 32768
+  },
+  "recording_used": "data\\eval_benchmark\\00EABED2-271D-49D8-B599-1D4A09240601\\recording.csv",
+  "timeline_build": {
+    "seconds": 17.06,
+    "peak_python_memory_mb": 719.1,
+    "recording_samples": 60002,
+    "recording_span_sec": 7179.0,
+    "intervals_produced": 3,
+    "realtime_factor": 420.7,
+    "note": "one-time ingestion cost per recording, not paid per question"
+  },
+  "per_query": {
+    "repeats": 5,
+    "deterministic_only": {
+      "What activity is the user performing?": {
+        "intent_ms": 0.48,
+        "query_ms": 0.12,
+        "total_ms": 0.59
+      },
+      "How long was the user walking?": {
+        "intent_ms": 0.46,
+        "query_ms": 0.07,
+        "total_ms": 0.53
+      },
+      "How many times did the user walk?": {
+        "intent_ms": 0.46,
+        "query_ms": 0.05,
+        "total_ms": 0.52
+      },
+      "Did the user spend more time walking or sitting?": {
+        "intent_ms": 0.5,
+        "query_ms": 0.09,
+        "total_ms": 0.63
+      },
+      "Is the user walking?": {
+        "intent_ms": 0.47,
+        "query_ms": 0.13,
+        "total_ms": 0.59
+      },
+      "Did the user begin walking at any point, and if so, when?": {
+        "intent_ms": 0.51,
+        "query_ms": 0.15,
+        "total_ms": 0.69
+      }
+    },
+    "with_slm_explanation": {
+      "What activity is the user performing?": {
+        "intent_ms": 0.31,
+        "query_ms": 0.06,
+        "total_ms": 0.38
+      },
+      "How long was the user walking?": {
+        "intent_ms": 0.14,
+        "query_ms": 0.02,
+        "total_ms": 0.15
+      },
+      "How many times did the user walk?": {
+        "intent_ms": 0.13,
+        "query_ms": 0.01,
+        "total_ms": 0.14
+      },
+      "Did the user spend more time walking or sitting?": {
+        "intent_ms": 0.15,
+        "query_ms": 0.02,
+        "total_ms": 0.17
+      },
+      "Is the user walking?": {
+        "intent_ms": 0.18,
+        "query_ms": 1908.79,
+        "total_ms": 1908.98
+      },
+      "Did the user begin walking at any point, and if so, when?": {
+        "intent_ms": 0.22,
+        "query_ms": 1926.72,
+        "total_ms": 1926.94
+      }
+    },
+    "median_ms_deterministic": 0.59,
+    "median_ms_with_slm": 1918.0,
+    "peak_python_memory_mb_deterministic": 0.0,
+    "slm_process_memory": {
+      "total_rss_mb": 74.6,
+      "total_private_commit_mb": 2147.1,
+      "processes": {
+        "ollama.exe": {
+          "rss_mb": 26.4,
+          "private_commit_mb": 68.8
+        },
+        "llama-server.exe": {
+          "rss_mb": 37.3,
+          "private_commit_mb": 2010.6
+        },
+        "ollama app.exe": {
+          "rss_mb": 11.0,
+          "private_commit_mb": 67.8
+        }
+      },
+      "note": "Resident size (RSS) badly under-reports this workload on Windows: the GGUF weights are memory-mapped, so pages are evicted and re-faulted and RSS reads ~39 MB while the process actually reserves ~2 GB. Private/commit is the meaningful peak-memory figure; on-disk size is 986 MB."
+    },
+    "note": "measured against an already-built timeline; the SLM is invoked only for verification and onset explanations, so most question types cost the deterministic figure"
+  }
+}

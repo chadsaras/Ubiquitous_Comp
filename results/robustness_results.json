@@ -1,0 +1,104 @@
+{
+  "model": "results/model_rf_fold0.joblib",
+  "n_recordings": 5,
+  "seed": 0,
+  "wall_time_sec": 279.7,
+  "results": [
+    {
+      "kind": "noise",
+      "level": 0.0,
+      "n_questions": 90,
+      "macro_accuracy": 0.5333333333333333
+    },
+    {
+      "kind": "noise",
+      "level": 0.01,
+      "n_questions": 90,
+      "macro_accuracy": 0.49523809523809526
+    },
+    {
+      "kind": "noise",
+      "level": 0.02,
+      "n_questions": 90,
+      "macro_accuracy": 0.49523809523809526
+    },
+    {
+      "kind": "noise",
+      "level": 0.05,
+      "n_questions": 90,
+      "macro_accuracy": 0.4571428571428572
+    },
+    {
+      "kind": "noise",
+      "level": 0.1,
+      "n_questions": 90,
+      "macro_accuracy": 0.20952380952380953
+    },
+    {
+      "kind": "noise",
+      "level": 0.2,
+      "n_questions": 90,
+      "macro_accuracy": 0.20952380952380953
+    },
+    {
+      "kind": "drop",
+      "level": 0,
+      "n_questions": 90,
+      "macro_accuracy": 0.5333333333333333
+    },
+    {
+      "kind": "drop",
+      "level": 10,
+      "n_questions": 90,
+      "macro_accuracy": 0.5047619047619049
+    },
+    {
+      "kind": "drop",
+      "level": 20,
+      "n_questions": 90,
+      "macro_accuracy": 0.5142857142857143
+    },
+    {
+      "kind": "drop",
+      "level": 30,
+      "n_questions": 90,
+      "macro_accuracy": 0.5047619047619049
+    },
+    {
+      "kind": "drop",
+      "level": 50,
+      "n_questions": 90,
+      "macro_accuracy": 0.5547619047619048
+    },
+    {
+      "kind": "rate",
+      "level": 25,
+      "n_questions": 90,
+      "macro_accuracy": 0.5333333333333333
+    },
+    {
+      "kind": "rate",
+      "level": 20,
+      "n_questions": 90,
+      "macro_accuracy": 0.5333333333333333
+    },
+    {
+      "kind": "rate",
+      "level": 15,
+      "n_questions": 90,
+      "macro_accuracy": 0.5452380952380953
+    },
+    {
+      "kind": "rate",
+      "level": 10,
+      "n_questions": 90,
+      "macro_accuracy": 0.5452380952380953
+    },
+    {
+      "kind": "rate",
+      "level": 5,
+      "n_questions": 90,
+      "macro_accuracy": 0.6357142857142858
+    }
+  ]
+}
