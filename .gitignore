@@ -15,3 +15,7 @@ results/model_rf_fold1.joblib
 results/model_rf_fold2.joblib
 results/model_rf_fold3.joblib
 results/model_rf_fold4.joblib
+
+report.aux
+report.log
+report.out
