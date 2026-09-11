@@ -75,8 +75,12 @@ def parse_intent_fast_rules(question: str) -> Optional[QueryIntent]:
         if len(acts) >= 2:
             return QueryIntent(intent=IntentType.COMPARE, target_activity=acts[0], compare_activity=acts[1])
 
-    # 2. Duration
-    if q.startswith("how long") or "duration" in q or "time spent" in q:
+    # 2. Duration. "How much ... did she spend resting?" is the brief's own phrasing in the
+    # opening scenario, so match the "how much" question form too -- but only as a question form,
+    # never on the bare word "spend", or the yes/no "Did the user spend a prolonged period
+    # resting?" would be mistaken for a duration query.
+    if (q.startswith(("how long", "how much")) or "duration" in q
+            or "time spent" in q or "total time" in q):
         target = acts[0] if acts else None
         return QueryIntent(intent=IntentType.DURATION, target_activity=target)
 
@@ -90,13 +94,24 @@ def parse_intent_fast_rules(question: str) -> Optional[QueryIntent]:
         target = acts[0] if acts else None
         return QueryIntent(intent=IntentType.ONSET, target_activity=target)
 
-    # 5. Open World keywords
+    # 5. Open World keywords. Keep any named activity too: "did she lie down for a prolonged
+    # period" must be answered about lying down specifically, not about sedentary time in general,
+    # or a long sitting stretch would wrongly satisfy it.
+    target = acts[0] if acts else None
     if "prolonged" in q or "rest" in q:
-        return QueryIntent(intent=IntentType.OPEN_WORLD, semantic_concept="prolonged_rest")
+        # "rest"/"resting" is generic sedentary behaviour and must not be narrowed to lying down
+        # (the synonym table maps "resting" -> lying_down, which would miss a long sitting
+        # stretch). Only an explicitly named posture narrows the question.
+        posture = ("lie", "lying", "lying down", "lay", "sleep", "sleeping", "sit", "sitting", "seated")
+        named_posture = any(re.search(rf"\b{re.escape(t)}\b", q) for t in posture)
+        return QueryIntent(intent=IntentType.OPEN_WORLD, semantic_concept="prolonged_rest",
+                           target_activity=target if named_posture else None)
     if "wheeled" in q or "pedal" in q:
-        return QueryIntent(intent=IntentType.OPEN_WORLD, semantic_concept="wheeled_movement")
+        return QueryIntent(intent=IntentType.OPEN_WORLD, semantic_concept="wheeled_movement",
+                           target_activity=target)
     if "strenuous" in q:
-        return QueryIntent(intent=IntentType.OPEN_WORLD, semantic_concept="strenuous_activity")
+        return QueryIntent(intent=IntentType.OPEN_WORLD, semantic_concept="strenuous_activity",
+                           target_activity=target)
 
     # 6. Verify -- any yes/no-style question ("is/was/did/does/were/has ...") naming an
     # activity, not just the literal phrase "the user" (real subjects vary: "she", "he",

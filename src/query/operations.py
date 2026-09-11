@@ -178,13 +178,18 @@ def handle_onset(intent: QueryIntent, timeline) -> FormattedAnswerBlock:
             explanation=explanation
         )
     else:
+        # Task 3 makes evidence "required and directly assessed", so a negative onset still cites
+        # the span that was examined to reach it -- unlike Task 1 verification, where the brief
+        # explicitly permits N/A.
         return FormattedAnswerBlock(
             answer="No",
             activity_event=f"Onset of {target.replace('_', ' ')}",
-            timestamps="N/A",
-            sensor_modality="N/A",
-            sensor_channels="N/A",
-            explanation=f"No episodes of {target.replace('_', ' ')} were observed in the recording."
+            timestamps=f"0 to {int(round(timeline.recording_sec))} (seconds from start)",
+            sensor_modality="Accelerometer, Gyroscope",
+            sensor_channels="All",
+            explanation=f"No onset of {target.replace('_', ' ')} was found: the full recording was "
+                        f"searched and no interval was classified as "
+                        f"{target.replace('_', ' ')}."
         )
 
 
@@ -213,32 +218,81 @@ def handle_compare(intent: QueryIntent, timeline) -> FormattedAnswerBlock:
     )
 
 
+PROLONGED_SEC = 1200        # 20 minutes; below this a sedentary stretch reads as a pause, not rest
+
+
+def _negative_open_world(event: str, reason: str, timeline, candidates: list) -> FormattedAnswerBlock:
+    """
+    A "no" at Tier 4 still has to be grounded -- the brief makes evidence and explanation
+    mandatory at this tier, so a bare N/A scores zero even when the verdict is right. Cite the
+    strongest candidate actually found (that's *why* it's a no), or the span examined when there
+    was no candidate at all.
+    """
+    if candidates:
+        longest = max(candidates, key=lambda iv: iv.end - iv.start)
+        span = f"{int(round(longest.start))} to {int(round(longest.end))} (seconds from start)"
+        found = (f"The closest match found was {longest.activity.replace('_', ' ')} for "
+                 f"{int(round(longest.end - longest.start))} seconds over the cited interval. ")
+    else:
+        span = f"0 to {int(round(timeline.recording_sec))} (seconds from start)"
+        found = "No interval of the relevant kind was detected anywhere in the recording. "
+    return FormattedAnswerBlock(
+        answer="Likely no",
+        activity_event=event,
+        timestamps=span,
+        sensor_modality="Accelerometer, Gyroscope",
+        sensor_channels="All",
+        explanation=found + reason,
+    )
+
+
 def handle_open_world(intent: QueryIntent, timeline) -> FormattedAnswerBlock:
-    """Task 4: Open-World Semantic Reasoning grounded in signal statistics."""
+    """
+    Task 4: Open-World Semantic Reasoning grounded in signal statistics.
+
+    Every branch -- positive or negative -- returns real timestamps, modality and channels,
+    because at this tier the brief assesses the evidence itself, not just the verdict.
+    """
     concept = (intent.semantic_concept or "").lower()
 
-    # 1. Prolonged rest / lying down
+    # 1. Prolonged rest. If the question named a specific posture ("did she lie down..."), judge
+    #    that posture only; otherwise any sustained sedentary stretch counts as rest.
     if "rest" in concept or "prolonged" in concept:
-        lying_ivs = timeline.of("lying_down")
-        if lying_ivs:
-            longest = max(lying_ivs, key=lambda iv: iv.end - iv.start)
+        rest_classes = [intent.target_activity] if intent.target_activity else ["lying_down", "sitting"]
+        rest_ivs = [iv for c in rest_classes for iv in timeline.of(c)]
+        if rest_ivs:
+            longest = max(rest_ivs, key=lambda iv: iv.end - iv.start)
             dur = int(round(longest.end - longest.start))
-            if dur >= 1200:  # >= 20 minutes
+            if dur >= PROLONGED_SEC:
+                summary = longest.summary or {}
+                acc_std = summary.get("acc_mag_std")
+                gyro_std = summary.get("gyro_mag_std")
+                measured = (f" Measured over that interval: acc_mag_std = {acc_std:.4f} g"
+                            + (f", gyro_mag_std = {gyro_std:.4f} rad/s" if gyro_std is not None else "")
+                            + ".") if acc_std is not None else ""
                 return FormattedAnswerBlock(
                     answer="Likely yes",
-                    activity_event="Prolonged lying down",
+                    activity_event=f"Prolonged {longest.activity.replace('_', ' ')}",
                     timestamps=f"{int(round(longest.start))} to {int(round(longest.end))} (seconds from start)",
                     sensor_modality="Accelerometer, Gyroscope",
                     sensor_channels="All",
-                    explanation="A long, continuous stretch of near-zero acceleration variance and "
-                                "minimal gyroscope activity, well beyond any brief stationary pause, "
-                                "is consistent with sustained rest rather than a transient stop."
+                    explanation=f"A continuous {dur}-second stretch of near-zero acceleration variance and "
+                                f"minimal gyroscope activity, well beyond any brief stationary pause, is "
+                                f"consistent with sustained rest rather than a transient stop." + measured,
                 )
+        return _negative_open_world(
+            "Prolonged rest", f"No sedentary stretch reached the {PROLONGED_SEC}-second threshold used "
+                              f"to separate sustained rest from a transient pause.", timeline, rest_ivs)
 
     # 2. Wheeled or pedal-based movement (bicycling)
     if "wheel" in concept or "pedal" in concept or "cycl" in concept:
         bike_ivs = timeline.of("bicycling")
         if bike_ivs:
+            longest = max(bike_ivs, key=lambda iv: iv.end - iv.start)
+            summary = longest.summary or {}
+            gyro_std = summary.get("gyro_mag_std")
+            measured = f" Gyroscope magnitude variability over the cited span was {gyro_std:.3f} rad/s." \
+                if gyro_std is not None else ""
             return FormattedAnswerBlock(
                 answer="Yes",
                 activity_event="Unknown outdoor physical activity, consistent with cycling",
@@ -246,34 +300,45 @@ def handle_open_world(intent: QueryIntent, timeline) -> FormattedAnswerBlock:
                 sensor_modality="Accelerometer, Gyroscope",
                 sensor_channels="All",
                 explanation="The segment shows smooth, continuous, cyclic acceleration at a steady cadence, "
-                            "without the discrete heel-strike spikes of walking or running, accompanied by sustained "
-                            "periodic gyroscope oscillation consistent with pedaling and balance, which points to a low-impact wheeled mode."
+                            "without the discrete heel-strike spikes of walking or running, accompanied by "
+                            "sustained periodic gyroscope oscillation consistent with pedaling and balance, "
+                            "which points to a low-impact wheeled mode." + measured,
             )
+        return _negative_open_world(
+            "Wheeled or pedal-based movement",
+            "No interval showed the smooth, steady-cadence acceleration without heel-strike spikes that "
+            "distinguishes pedalling from walking or running.", timeline,
+            [iv for iv in timeline.intervals if iv.activity in ("walking", "running")])
 
     # 3. Strenuous activity
     if "strenuous" in concept:
         candidates = [iv for iv in timeline.intervals if iv.activity in ("running", "bicycling")]
         if candidates:
             longest = max(candidates, key=lambda iv: iv.end - iv.start)
+            summary = longest.summary or {}
+            acc_std = summary.get("acc_mag_std")
+            measured = f" Acceleration magnitude variability over that span was {acc_std:.3f} g." \
+                if acc_std is not None else ""
             return FormattedAnswerBlock(
                 answer="Yes",
-                activity_event=f"Strenuous activity ({longest.activity})",
+                activity_event=f"Strenuous activity ({longest.activity.replace('_', ' ')})",
                 timestamps=f"{int(round(longest.start))} to {int(round(longest.end))} (seconds from start)",
                 sensor_modality="Accelerometer, Gyroscope",
                 sensor_channels="All",
-                explanation=f"Sustained elevated accelerometer magnitude variance and high kinetic energy "
-                            f"indicate strenuous physical exertion during the cited interval."
+                explanation="Sustained elevated accelerometer magnitude variance and high kinetic energy "
+                            "indicate strenuous physical exertion during the cited interval." + measured,
             )
+        return _negative_open_world(
+            "Strenuous activity",
+            "No interval reached the sustained high acceleration variance that distinguishes exertion "
+            "from ordinary ambulation.", timeline,
+            [iv for iv in timeline.intervals if iv.activity in ("walking", "standing_and_moving")])
 
-    # Fallback open-world answer
-    return FormattedAnswerBlock(
-        answer="Likely no",
-        activity_event="Unclassified behavior",
-        timestamps="N/A",
-        sensor_modality="N/A",
-        sensor_channels="N/A",
-        explanation="No sensor signal pattern matched the described behavior."
-    )
+    # Unrecognised concept: still grounded, and honest that the concept was not matched.
+    return _negative_open_world(
+        "Unclassified behavior",
+        "The described behaviour did not map onto any pattern the system computes from the signal.",
+        timeline, timeline.intervals)
 
 
 def execute_query(intent: QueryIntent, timeline) -> FormattedAnswerBlock:
