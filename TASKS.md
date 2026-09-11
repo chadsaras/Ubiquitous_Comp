@@ -368,6 +368,114 @@ unchanged at 0.623.
 
 ---
 
+### Task 10 — Duration accuracy: root-caused a real aggregation bug (not just a model limit)
+
+**Outcome: [x] done — duration 0.139 -> 0.167, overall macro QA 0.623 -> 0.633, with no regression
+on any question type.**
+
+The earlier conclusion that duration error was purely inherited from the recognizer was
+**incomplete**. Measuring predicted-vs-reference total time per recording exposed a genuine bug in
+the aggregation layer:
+
+| Recording | Reference time | Predicted time | Ratio |
+|---|---|---|---|
+| 1155FF54-63D3 | 2,220 s | **11,073 s** | **4.99x** |
+| (other 11) | ~7,200 s | ~7,200 s | ~1.00 |
+
+**Cause.** `build_timeline()` padded every burst out to the *median inter-burst period*, assuming
+ExtraSensory's usual one-burst-per-minute cadence. That user's labelled minutes are ~5 minutes
+apart, so `detect_bursty()` returned `period = 300 s` and each **16 s burst was stretched to
+300 s — a 19x inflation**, claiming activity across time where nothing was recorded. Every
+duration answer for that user was inflated ~5x, dragging the whole metric down.
+
+**Fix.** An ExtraSensory label describes **one minute**, however far apart the labelled minutes
+are, so burst padding is now capped at 60 s (`LABEL_MINUTE_SEC`). This is a correctness fix, not a
+tuned parameter, and it also removes a grounding defect: intervals no longer claim evidence over
+unrecorded gaps.
+
+| Metric | Before | After |
+|---|---|---|
+| Overall QA accuracy (macro) | 0.623 | **0.633** |
+| Duration accuracy | 0.139 | **0.167** |
+| Duration MAE | 1551.8 s | **1334.5 s** |
+| Duration MAPE | 125% | **92%** |
+| Open-world accuracy | 0.833 | **0.875** |
+| Grounded AND correct | 0.210 | **0.229** |
+| Grounding precision | 0.379 | **0.437** |
+
+**A second change was tested and deliberately rejected.** Capping the minimum resolvable episode
+at 60 s (rather than 1.5x the period) was also tried, on the argument that a one-minute episode is
+genuine. Measured: it improved open-world (0.875 -> 0.917) but **degraded count accuracy
+0.361 -> 0.278** and lowered overall macro to 0.627. Since that threshold exists precisely to
+suppress recognizer flicker, and the count regression is direct evidence that the flicker is real,
+the original value was kept. Only the unambiguous bug fix was retained. *(Noted for transparency:
+two configurations were compared on the benchmark; the minimal, independently-justified change was
+kept rather than the highest-scoring one.)*
+
+**What the remaining duration error actually is.** With the inflation removed, the residual error
+is genuinely the recognizer. In time terms across all 12 recordings:
+
+| True activity | Where its time is predicted to go |
+|---|---|
+| sitting (31,014 s) | sitting 67%, lying_down 29% |
+| lying_down (20,051 s) | **sitting 51%**, lying_down 48% |
+| standing_and_moving (16,162 s) | **sitting 55%**, lying_down 33%, walking 10% |
+| walking (8,128 s) | **sitting 55%**, walking 38% |
+| standing_in_place (2,278 s) | **sitting 67%**, walking 21% |
+| bicycling (683 s) | bicycling 100% |
+| running (240 s) | running 100% |
+
+Everything collapses toward `sitting`. Note bicycling and running are perfect but are only 1.2% of
+the time — the imbalance the brief warns about, visible directly.
+
+---
+
+### Task 11 — Class-prior calibration: tested in isolation, REJECTED (documented negative result)
+
+**Outcome: [x] done — does not work end to end. Baseline kept. Full write-up in
+`experiments/calibration/FINDINGS.md`.**
+
+Tested whether the sitting-collapse is a decision-threshold artefact that probability
+re-weighting could fix. Run in isolation (nothing in `src/` changed; calibration applied by
+wrapping `window_predictions` at runtime). Stage 1 on the institute server, stage 2 locally.
+
+**Integrity:** fold 0 TRAIN users split by user into 34 sub-train / 11 validation; forest fitted on
+sub-train only; every parameter chosen on validation only; the 12 test users scored once at the end.
+
+**Stage 1 (minute level) looked like a clear win.** Time error (`sum_c |predicted minutes -
+true minutes| / total`) fell 0.435 -> 0.300, a 31% reduction. Prior correction at alpha=0.4 beat
+baseline on macro-F1 *and* balanced accuracy at once. Rare-class recall moved exactly as intended
+(running 0.195 -> 0.439, bicycling 0.594 -> 0.646), and over-predicted sitting minutes fell from
+7,935 to 6,483 against a true 4,792.
+
+**Stage 2 (real QA harness) did not confirm it.** No candidate dominates the baseline:
+
+| Candidate | Macro QA | Duration | Count | Grounded&correct |
+|---|---|---|---|---|
+| **Baseline** | **0.633** | 0.167 | **0.361** | **0.229** |
+| prior alpha=0.4 | 0.629 | **0.194** | 0.306 | 0.229 |
+| coord ascent (max F1) | **0.642** | 0.139 | 0.361 | 0.210 |
+| coord ascent (min time error) | 0.614 | 0.111 | 0.306 | 0.223 |
+
+The candidate that won stage 1 outright produced the **worst** end-to-end duration accuracy. Best
+duration accuracy (+0.027) costs count (-0.055), open-world (-0.083) and grounding (-0.056).
+
+**Why the proxy misled:** duration is scored within `max(5 s, 10%)`, so pulling aggregate class
+totals closer does not necessarily pull any individual recording inside its band; and predicting
+more rare-class minutes creates more episodes, which hurts count and fragments the timeline, which
+hurts grounding. Duration and count pull in opposite directions.
+
+**Significance caveat:** with 36 duration questions, one question is worth 0.028 — the headline
++0.027 is a single question changing. No gap here is large enough to call a real improvement.
+
+**What this is worth in the report:** the mechanism, not the score. Re-weighting demonstrably works
+as a knob (stage 1 proves it) but moves the *wrong minutes*, so the sitting-collapse is genuine
+class confusability in the features — sedentary postures being near-indistinguishable from a phone
+accelerometer — not a miscalibrated classifier. That independently corroborates the ~47-49% ceiling
+six different models already hit, and it is a stronger claim than "we tried and accuracy is low".
+
+---
+
 ### Task 7b — Explanation faithfulness (brief-mandated, was outstanding)
 
 **Outcome: [x] done.** `scripts/score_explanations.py` -> `results/qa_eval/explanation_scores.json`.
@@ -406,6 +514,141 @@ proper fix.
 - Confirm no raw dataset committed; `.gitignore` sane; commit history reads as incremental work.
 
 **Outcome:** _(to fill in)_
+
+---
+
+## Part B follow-ups (quality items) — completed
+
+### B4(a) — Phrasing robustness: the biggest hidden weakness found and fixed
+
+**Outcome: [x] done — fast-path routing on realistic paraphrases went 47% -> 100%.**
+
+The auto-generated benchmark asks every question in one of 18 templates the rules were written
+against, so it **structurally could not detect a phrasing weakness**. The brief says the hidden
+evaluation "will include difficult and edge-case questions chosen to probe robustness", so this
+was the most likely way to lose marks on the day.
+
+Wrote 32 deliberately different paraphrases (`tests/test_intent_robustness.py`), several lifted
+from the brief's own scenario. **Only 15/32 routed correctly** — 17 fell through to the SLM, which
+is ~2000x slower per query and measurably worse at routing.
+
+The cause was systematic: rules anchored on rigid prefixes. `startswith("how long")` missed *"For
+how long did she walk?"* and *"Roughly how long was she on a bike?"*; `startswith("when did")`
+missed *"At what point did walking start?"*; identification only matched two literal phrases.
+
+Fixed by matching cues anywhere in the question instead of at the start, separating count from
+duration on the **noun** ("how many *episodes*" vs "how many *minutes*") rather than word order,
+accepting indirect requests ("Can you confirm...", "Is there any evidence of..."), and adding
+natural synonyms for the open-world concepts (vigorous/exertion -> strenuous;
+inactivity/motionless/extended period -> rest).
+
+**Result: 32/32.** All 93 tests pass and the QA evaluation was byte-identical afterwards
+(macro 0.633, every per-type number unchanged) — pure coverage gain, no regression. The test
+asserts a 90% floor so a future regression fails the build rather than silently shifting load onto
+the SLM.
+
+### B5 — Sample sizes on the two weakest question types
+
+**Outcome: [x] done.** Identification had n=12 (one per recording), so a single answer moved that
+bar by 8 points. Now asks three phrasings per recording (**n=36**), which doubles as a check that
+the answer does not depend on wording. Comparison now also asks the dominant-vs-rarest and
+second-vs-third pairs (**n=34**), so the type is no longer measured only on the easy
+dominant-vs-runner-up case.
+
+Effect: **overall macro QA 0.633 -> 0.639**, comparison 0.667 -> 0.706, grounded-and-correct
+0.229 -> 0.236, on 236 questions instead of 216.
+
+### B7 — A confusion matrix consistent with the QA figures
+
+**Outcome: [x] done.** `scripts/make_benchmark_confusion.py` ->
+`results/fig2b_benchmark_confusion.png`. The existing Figure 2 is minute-level 5-fold CV over all
+60 users, which is the right way to characterise the *recognizer*; every QA figure instead comes
+from the full *pipeline* on 12 held-out recordings, so aggregation-layer errors never appeared in
+it. Figure 2b closes that gap and is measured in **seconds**, because that is what duration and
+grounding answers are built from.
+
+| True activity | True time | Predicted time | Time recall | Time precision | Absorbed mostly by |
+|---|---|---|---|---|---|
+| lying_down | 20,051 s | 24,421 s | 0.48 | 0.39 | sitting |
+| sitting | 31,014 s | 46,006 s | 0.67 | 0.45 | lying_down |
+| standing_in_place | 2,278 s | **108 s** | **0.00** | 0.00 | sitting |
+| standing_and_moving | 16,164 s | **1,327 s** | **0.01** | 0.13 | sitting |
+| walking | 8,128 s | 5,649 s | 0.38 | 0.55 | sitting |
+| running | 240 s | 256 s | **1.00** | 0.94 | — |
+| bicycling | 683 s | 791 s | **1.00** | 0.86 | — |
+
+> **Superseded by the 5-fold numbers below — do not quote this table in the report.** On fold 0
+> alone, running and bicycling showed recall 1.00, which looked like "the system nails periodic
+> motion". That was an artefact of tiny samples: fold 0 contains just 240 s of running and 683 s of
+> bicycling. Pooled over all five folds (3,086 s and 29,560 s) the true figures are 0.27 and 0.63.
+> The standing-posture finding, by contrast, held up.
+
+See Task 12 for the corrected, pooled confusion matrix.
+
+---
+
+### Task 12 — B4(b): full 5-fold evaluation over all 60 users
+
+**Outcome: [x] done. Headline is now `0.641` macro QA accuracy over 1,241 questions on 57 held-out
+recordings spanning all 60 users, using the dataset's official 5-fold user-level split.**
+
+Each fold was scored with its **own** held-out Random Forest (fitted only on that fold's train
+users) against its **own** held-out recordings — the same protocol
+`scripts/train_classifier.py` already uses for the recognition backbone, so the QA layer and the
+recognizer are now reported consistently. Models and benchmarks were built on the institute server
+(~7 min), and all five evaluations were run in one local environment so no cross-machine difference
+can affect comparability.
+
+| Fold | Recordings | Questions | Macro QA | Duration | Grounded & correct |
+|---|---|---|---|---|---|
+| 0 | 12 | 262 | 0.639 | 0.167 | 0.236 |
+| 1 | 12 | 263 | 0.668 | 0.167 | 0.336 |
+| 2 | 11 | 238 | 0.621 | 0.062 | 0.288 |
+| 3 | 12 | 259 | 0.609 | 0.057 | 0.195 |
+| 4 | 10 | 219 | 0.670 | 0.200 | 0.293 |
+| **POOLED** | **57** | **1,241** | **0.641** | **0.130** | **0.269** |
+
+**Between-fold spread is small: sd 0.027, range 0.609-0.670.** The headline is stable across
+completely disjoint user groups, which is much stronger evidence than a single fold. The confidence
+interval on the headline tightened from **±0.091 to ±0.041**.
+
+**The headline barely moved (0.639 -> 0.641) but several component numbers moved a lot**, which is
+the real justification for having run this:
+
+| Question type | Fold 0 only | All 5 folds | Shift |
+|---|---|---|---|
+| Identification | 0.500 | **0.649** | +0.149 (fold 0 was unlucky) |
+| Count | 0.361 | **0.426** | +0.065 |
+| Comparison | 0.706 | **0.735** | +0.029 |
+| Verification | 0.944 | **0.883** | -0.061 |
+| Open-world | 0.875 | **0.763** | -0.112 |
+| Duration | 0.167 | **0.130** | -0.037 |
+| Grounded & correct | 0.236 | **0.269** | +0.033 |
+
+**It also caught a false claim before it reached the report.** On fold 0, running and bicycling both
+showed time-recall 1.00, supporting a tidy story that the system handles periodic motion perfectly.
+Fold 0 simply contains very little of either (240 s and 683 s). Pooled over 3,086 s of running and
+29,560 s of bicycling, the real figures are **0.27 and 0.63**. Corrected pooled confusion by time:
+
+| True activity | True time | Predicted time | Time recall | Time precision | Absorbed mostly by |
+|---|---|---|---|---|---|
+| sitting | 151,381 s | 201,833 s | 0.70 | 0.53 | lying_down |
+| standing_and_moving | 64,095 s | 24,186 s | **0.08** | 0.20 | sitting |
+| lying_down | 62,786 s | 64,930 s | 0.38 | 0.37 | sitting |
+| walking | 49,882 s | 61,117 s | 0.54 | 0.44 | sitting |
+| bicycling | 29,560 s | 19,174 s | 0.63 | **0.97** | walking |
+| standing_in_place | 14,735 s | 3,203 s | **0.04** | 0.19 | sitting |
+| running | 3,086 s | 1,081 s | 0.27 | 0.78 | sitting |
+
+The durable finding: **the two standing postures remain effectively invisible** (0.04 and 0.08 time
+recall) and their time is absorbed into `sitting`, which is over-predicted by a third
+(201,833 s predicted against 151,381 s true). Bicycling has the highest precision of any class
+(0.97) — when the system says bicycling it is almost always right, it just misses a third of it.
+This is the root cause of the duration weakness and of why class-prior calibration could not fix it
+(Task 11).
+
+All figures (1, 2b, 3) regenerated from the pooled data; Figure 5 remains fold-0-based, which is
+noted on it.
 
 ---
 

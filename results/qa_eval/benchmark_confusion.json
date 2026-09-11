@@ -1,0 +1,135 @@
+{
+  "n_recordings": 57,
+  "matrix_seconds": [
+    [
+      24160.22,
+      34428.659999999996,
+      0.0,
+      2884.62,
+      1312.5000000000007,
+      0.0,
+      0.0
+    ],
+    [
+      20635.180000000004,
+      106475.0,
+      442.98000000000025,
+      9489.360000000002,
+      14182.279999999999,
+      0.0,
+      156.19999999999982
+    ],
+    [
+      992.9600000000007,
+      7884.799999999999,
+      607.4399999999996,
+      2081.159999999999,
+      3130.9600000000014,
+      16.359999999999673,
+      21.320000000000164
+    ],
+    [
+      11192.88,
+      35673.28,
+      759.3599999999988,
+      4832.960000000001,
+      11440.16,
+      0.0,
+      196.35999999999967
+    ],
+    [
+      5133.98,
+      13227.14,
+      672.6399999999994,
+      3478.059999999999,
+      26870.9,
+      223.64000000000033,
+      275.64
+    ],
+    [
+      0.0,
+      1746.6400000000003,
+      0.0,
+      0.0,
+      498.3599999999997,
+      841.0,
+      0.0
+    ],
+    [
+      2815.04,
+      2397.5,
+      721.0,
+      1419.66,
+      3681.8600000000006,
+      0.0,
+      18524.94
+    ]
+  ],
+  "classes": [
+    "lying_down",
+    "sitting",
+    "standing_in_place",
+    "standing_and_moving",
+    "walking",
+    "running",
+    "bicycling"
+  ],
+  "per_class": {
+    "lying_down": {
+      "true_seconds": 62786.0,
+      "predicted_seconds": 64930.3,
+      "correct_seconds": 24160.2,
+      "time_recall": 0.3848,
+      "time_precision": 0.3721,
+      "largest_confusion": "sitting"
+    },
+    "sitting": {
+      "true_seconds": 151381.0,
+      "predicted_seconds": 201833.0,
+      "correct_seconds": 106475.0,
+      "time_recall": 0.7034,
+      "time_precision": 0.5275,
+      "largest_confusion": "lying_down"
+    },
+    "standing_in_place": {
+      "true_seconds": 14735.0,
+      "predicted_seconds": 3203.4,
+      "correct_seconds": 607.4,
+      "time_recall": 0.0412,
+      "time_precision": 0.1896,
+      "largest_confusion": "sitting"
+    },
+    "standing_and_moving": {
+      "true_seconds": 64095.0,
+      "predicted_seconds": 24185.8,
+      "correct_seconds": 4833.0,
+      "time_recall": 0.0754,
+      "time_precision": 0.1998,
+      "largest_confusion": "sitting"
+    },
+    "walking": {
+      "true_seconds": 49882.0,
+      "predicted_seconds": 61117.0,
+      "correct_seconds": 26870.9,
+      "time_recall": 0.5387,
+      "time_precision": 0.4397,
+      "largest_confusion": "sitting"
+    },
+    "running": {
+      "true_seconds": 3086.0,
+      "predicted_seconds": 1081.0,
+      "correct_seconds": 841.0,
+      "time_recall": 0.2725,
+      "time_precision": 0.778,
+      "largest_confusion": "sitting"
+    },
+    "bicycling": {
+      "true_seconds": 29560.0,
+      "predicted_seconds": 19174.5,
+      "correct_seconds": 18524.9,
+      "time_recall": 0.6267,
+      "time_precision": 0.9661,
+      "largest_confusion": "walking"
+    }
+  }
+}

@@ -4,28 +4,28 @@
     "judge_model": "qwen2.5:1.5b",
     "n_explanations": 120,
     "numeric_fidelity": {
-      "n_quoting_measurements": 62,
-      "n_faithful": 62,
+      "n_quoting_measurements": 60,
+      "n_faithful": 60,
       "rate": 1.0,
       "definition": "every g / Hz / rad-s value quoted in the explanation matches a value actually computed for the cited interval (2% tolerance)"
     },
     "rubric": {
       "n_scored": 120,
-      "mean": 3.367,
+      "mean": 3.183,
       "median": 3.0,
       "distribution": {
-        "1": 36,
+        "1": 41,
         "2": 0,
         "3": 26,
-        "4": 0,
-        "5": 58
+        "4": 2,
+        "5": 51
       },
       "caveat": "judged by the same model that generated the explanations; treat as indicative and read alongside numeric fidelity"
     },
     "per_type_mean_rubric": {
-      "open_world": 3.625,
-      "verification": 3.167,
-      "grounding": 3.222
+      "open_world": 3.312,
+      "verification": 2.889,
+      "grounding": 3.306
     }
   },
   "scored": [
@@ -34,7 +34,7 @@
       "type": "verification",
       "question": "Is the user standing and moving?",
       "answer": "Yes",
-      "explanation": "The sensor evidence supports the activity decision as the acceleration variance (acc_mag_std = 0.001 g) is within the typical range for standing and moving, indicating minimal acceleration fluctuations typical of these activities. The cadence (1.1 Hz) and gyroscope angular velocity (gyro_mag_std = 0.001 rad/s) are also within the typical range for standing and moving, suggesting consistent and smooth movement patterns. The acceleration range (acc_range = 0.005 g) is also within the typical range for standing and moving, indicating a moderate level of acceleration without excessive variability.",
+      "explanation": "The sensor evidence supports the activity decision as the acceleration variance (acc_mag_std = 0.001 g) is within the typical range for standing and moving, indicating minimal acceleration fluctuations typical of these activities. The cadence (1.1 Hz) is also within the typical range for standing and moving, suggesting a consistent walking pace. The gyroscope angular velocity (gyro_mag_std = 0.001 rad/s) is also within the typical range for standing and moving, indicating smooth and consistent movement. The acceleration range (acc_range = 0.005 g) is within the typical range for standing and moving, suggesting a smooth and stable environment.",
       "numeric_fidelity": {
         "quoted": [
           0.001,
@@ -61,7 +61,7 @@
         "unmatched": [],
         "faithful": true
       },
-      "rubric_score": 3
+      "rubric_score": 1
     },
     {
       "id": "00EABED2-271D-49D8-B599-1D4A09240601::verification::3",
@@ -213,7 +213,7 @@
         "unmatched": [],
         "faithful": true
       },
-      "rubric_score": 3
+      "rubric_score": 5
     },
     {
       "id": "098A72A5-E3E5-4F54-A152-BBDA0DF7B694::grounding::12",
@@ -294,7 +294,7 @@
         "unmatched": [],
         "faithful": true
       },
-      "rubric_score": 5
+      "rubric_score": 1
     },
     {
       "id": "0A986513-7828-4D53-AA1F-E02D6DF9561B::verification::1",
@@ -566,7 +566,7 @@
         "unmatched": [],
         "faithful": true
       },
-      "rubric_score": 5
+      "rubric_score": 1
     },
     {
       "id": "0BFC35E2-4817-4865-BFA7-764742302A2D::open_world::17",
@@ -608,7 +608,7 @@
         "unmatched": [],
         "faithful": true
       },
-      "rubric_score": 5
+      "rubric_score": 1
     },
     {
       "id": "0E6184E1-90C0-48EE-B25A-F1ECB7B9714E::verification::3",
@@ -708,30 +708,29 @@
       "type": "verification",
       "question": "Is the user lying down?",
       "answer": "Yes",
-      "explanation": "The sensor evidence supports the activity decision of lying down because the acceleration variance (acc_mag_std = 0.006 g) is within the typical range, indicating near-zero acceleration variance, and the cadence (4.0 Hz) is consistent with stationary rest. The gyroscope angular velocity (gyro_mag_std = 0.001 rad/s) is also within the typical range, suggesting smooth, low-impact motion. The acceleration range (acc_range = 0.030 g) is also within the typical range, indicating sustained periodic motion.",
+      "explanation": "The sensor evidence supports the activity decision of lying down because the acceleration variance (acc_mag_std = 0.006 g) is within the typical range, indicating near-zero acceleration variance, and the cadence (5.4 Hz) is consistent with stationary rest. The gyroscope angular velocity (gyro_mag_std = 0.001 rad/s) is also within the typical range, suggesting smooth, low-impact motion. The acceleration range (acc_range = 0.034 g) is also within the typical range, indicating sustained periodic motion.",
       "numeric_fidelity": {
         "quoted": [
           0.006,
-          4.0,
+          5.4,
           0.001,
-          0.03
+          0.034
         ],
         "unmatched": [],
         "faithful": true
       },
-      "rubric_score": 5
+      "rubric_score": 1
     },
     {
       "id": "1155FF54-63D3-4AB2-9863-8385D0BD0A13::verification::2",
       "type": "verification",
       "question": "Did the user spend any time sitting?",
       "answer": "Yes",
-      "explanation": "The sensor evidence supports the sitting activity because the acceleration variance (acc_mag_std = 0.006 g) is within the typical range, indicating near-zero acceleration fluctuations typical of stationary rest. The cadence (4.7 Hz) is also within the typical range, suggesting a consistent walking cadence. The gyroscope angular velocity (gyro_mag_std = 0.002 rad/s) is also within the typical range, indicating smooth, low-impact motion typical of sitting.",
+      "explanation": "The sensor evidence supports the sitting activity because the acceleration variance (acc_mag_std) is near-zero (0.006 g), indicating stationary rest, while the cadence is atypical (6.4 Hz), suggesting a lower-than-usual walking cadence, which is consistent with sitting. The gyroscope angular velocity (gyro_mag_std) is within the usual range, and the acceleration range (acc_range) is also typical for sitting.",
       "numeric_fidelity": {
         "quoted": [
           0.006,
-          4.7,
-          0.002
+          6.4
         ],
         "unmatched": [],
         "faithful": true
@@ -751,8 +750,8 @@
       "id": "1155FF54-63D3-4AB2-9863-8385D0BD0A13::grounding::11",
       "type": "grounding",
       "question": "Did the user begin lying down at any point, and if so, when?",
-      "answer": "Yes, lying down began at 581 seconds",
-      "explanation": "The sensor evidence supports the activity decision of lying down because the acceleration variance (acc_mag_std = 0.005 g) is within the typical range, indicating near-zero acceleration variance, and the cadence (7.8 Hz) is consistent with stationary rest. The gyroscope angular velocity (gyro_mag_std = 0.001 rad/s) is also within the typical range, suggesting smooth, low-impact motion. The acceleration range (acc_range = 0.030 g) is also within the typical range, indicating sustained periodic motion.",
+      "answer": "Yes, lying down began at 576 seconds",
+      "explanation": "The sensor evidence supports the activity decision of lying down because the acceleration variance (acc_mag_std) is near-zero (0.005 g), indicating stationary rest, while the cadence is high (7.8 Hz), consistent with typical walking activity. The gyroscope angular velocity (gyro_mag_std) is low (0.001 rad/s), further supporting the lying position. The acceleration range (acc_range) is moderate (0.030 g), which is within the typical range for lying down.",
       "numeric_fidelity": {
         "quoted": [
           0.005,
@@ -770,12 +769,11 @@
       "type": "grounding",
       "question": "Did the user begin sitting at any point, and if so, when?",
       "answer": "Yes, sitting began at 0 seconds",
-      "explanation": "The sensor evidence supports the sitting activity because the acceleration variance (acc_mag_std) is near-zero (0.007 g), indicating stationary rest, while the cadence is high (5.8 Hz), consistent with typical sitting pace. The gyroscope angular velocity (gyro_mag_std) is also within the usual range (0.059 rad/s), further confirming the sitting activity.",
+      "explanation": "The sensor evidence supports the sitting activity because the acceleration variance (acc_mag_std) is near-zero (0.007 g), indicating stationary rest, while the cadence is atypical (5.8 Hz), suggesting a lower-than-usual walking cadence, which is consistent with sitting rather than walking.",
       "numeric_fidelity": {
         "quoted": [
           0.007,
-          5.8,
-          0.059
+          5.8
         ],
         "unmatched": [],
         "faithful": true
@@ -795,40 +793,26 @@
       "id": "1155FF54-63D3-4AB2-9863-8385D0BD0A13::open_world::14",
       "type": "open_world",
       "question": "Did the user spend a prolonged period resting?",
-      "answer": "Likely yes",
-      "explanation": "A continuous 1500-second stretch of near-zero acceleration variance and minimal gyroscope activity, well beyond any brief stationary pause, is consistent with sustained rest rather than a transient stop. Measured over that interval: acc_mag_std = 0.0056 g, gyro_mag_std = 0.0010 rad/s.",
-      "numeric_fidelity": {
-        "quoted": [
-          0.0056,
-          0.001
-        ],
-        "unmatched": [],
-        "faithful": true
-      },
-      "rubric_score": 5
+      "answer": "Likely no",
+      "explanation": "The closest match found was lying down for 70 seconds over the cited interval. No sedentary stretch reached the 1200-second threshold used to separate sustained rest from a transient pause.",
+      "numeric_fidelity": null,
+      "rubric_score": 3
     },
     {
       "id": "1155FF54-63D3-4AB2-9863-8385D0BD0A13::open_world::15",
       "type": "open_world",
       "question": "Did the user lie down for a prolonged period?",
-      "answer": "Likely yes",
-      "explanation": "A continuous 1500-second stretch of near-zero acceleration variance and minimal gyroscope activity, well beyond any brief stationary pause, is consistent with sustained rest rather than a transient stop. Measured over that interval: acc_mag_std = 0.0056 g, gyro_mag_std = 0.0010 rad/s.",
-      "numeric_fidelity": {
-        "quoted": [
-          0.0056,
-          0.001
-        ],
-        "unmatched": [],
-        "faithful": true
-      },
-      "rubric_score": 5
+      "answer": "Likely no",
+      "explanation": "The closest match found was lying down for 70 seconds over the cited interval. No sedentary stretch reached the 1200-second threshold used to separate sustained rest from a transient pause.",
+      "numeric_fidelity": null,
+      "rubric_score": 3
     },
     {
       "id": "1155FF54-63D3-4AB2-9863-8385D0BD0A13::open_world::16",
       "type": "open_world",
       "question": "Was the user using a wheeled or pedal-based mode of movement?",
       "answer": "Likely no",
-      "explanation": "The closest match found was walking for 298 seconds over the cited interval. No interval showed the smooth, steady-cadence acceleration without heel-strike spikes that distinguishes pedalling from walking or running.",
+      "explanation": "The closest match found was walking for 70 seconds over the cited interval. No interval showed the smooth, steady-cadence acceleration without heel-strike spikes that distinguishes pedalling from walking or running.",
       "numeric_fidelity": null,
       "rubric_score": 3
     },
@@ -837,7 +821,7 @@
       "type": "open_world",
       "question": "Was the user doing anything strenuous?",
       "answer": "Likely no",
-      "explanation": "The closest match found was standing and moving for 299 seconds over the cited interval. No interval reached the sustained high acceleration variance that distinguishes exertion from ordinary ambulation.",
+      "explanation": "The closest match found was standing and moving for 70 seconds over the cited interval. No interval reached the sustained high acceleration variance that distinguishes exertion from ordinary ambulation.",
       "numeric_fidelity": null,
       "rubric_score": 3
     },
@@ -925,7 +909,7 @@
         "unmatched": [],
         "faithful": true
       },
-      "rubric_score": 5
+      "rubric_score": 3
     },
     {
       "id": "11B5EC4D-4133-4289-B475-4E737182A406::open_world::15",
@@ -1037,7 +1021,7 @@
         "unmatched": [],
         "faithful": true
       },
-      "rubric_score": 3
+      "rubric_score": 4
     },
     {
       "id": "136562B6-95B2-483D-88DC-065F28409FD2::grounding::13",
@@ -1555,7 +1539,7 @@
         "unmatched": [],
         "faithful": true
       },
-      "rubric_score": 5
+      "rubric_score": 4
     },
     {
       "id": "27E04243-B138-4F40-A164-F40B60165CF3::open_world::15",

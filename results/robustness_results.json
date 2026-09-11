@@ -2,7 +2,7 @@
   "model": "results/model_rf_fold0.joblib",
   "n_recordings": 5,
   "seed": 0,
-  "wall_time_sec": 279.7,
+  "wall_time_sec": 387.5,
   "results": [
     {
       "kind": "noise",
