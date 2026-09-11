@@ -63,6 +63,12 @@ GAP_SEC = 1.0          # a hole longer than this splits the recording into chunk
 MERGE_GAP_SEC = 90.0   # same-label intervals separated by less than this are joined
 MIN_EPISODE_SEC = 10.0 # shorter episodes are absorbed into the surrounding activity
 SMOOTH_K = 1           # window probabilities averaged with +-K neighbours before argmax
+LABEL_MINUTE_SEC = 60.0  # an ExtraSensory label describes ONE minute, however far apart the
+                         # labelled minutes are. Burst padding and the minimum resolvable episode
+                         # must both be capped by this: a user whose labelled minutes are 5 minutes
+                         # apart has a 300 s burst *period* but still only one minute of evidence
+                         # per burst, and padding to the period inflated that user's every duration
+                         # by 19x (16 s of signal stretched to 300 s).
 
 COLS = ["timestamp", "acc_x", "acc_y", "acc_z", "gyro_x", "gyro_y", "gyro_z"]
 
@@ -433,17 +439,20 @@ def build_timeline(recording: str | Path | pd.DataFrame, model_path: str | Path 
         df = df.copy(); df["t"] = df["timestamp"] - df["timestamp"].iloc[0]
     recording_sec = float(df["t"].iloc[-1])
     bursty, period = detect_bursty(df)
-    pad_to = period if bursty else None
+    # A burst is evidence for its own labelled minute, not for the whole gap until the next burst.
+    pad_to = min(period, LABEL_MINUTE_SEC) if bursty else None
     if bursty:
-        recording_sec = max(recording_sec, float(split_chunks(df)[-1]["t"].iloc[0]) + period)
+        recording_sec = max(recording_sec, float(split_chunks(df)[-1]["t"].iloc[0]) + pad_to)
 
     if bundle.get("kind") == "torch":
         wdf = window_predictions_torch(df, bundle)
     else:
         wdf = window_predictions(df, bundle, whole_chunk=bursty)
-    # in a bursty recording the natural unit is one burst period, so an "episode" shorter than
-    # that cannot be resolved; for a continuous stream keep the 10 s default.
-    min_ep = max(MIN_EPISODE_SEC, 1.5 * period) if bursty else MIN_EPISODE_SEC
+    # In a bursty recording the natural unit is one labelled minute, so an episode shorter than
+    # that cannot be resolved; for a continuous stream keep the 10 s default. Deriving this from
+    # the burst *period* instead would absorb genuine single-minute episodes into their
+    # neighbours (at period = 300 s it demanded 450 s before an episode was allowed to exist).
+    min_ep = max(MIN_EPISODE_SEC, 1.5 * min(period, LABEL_MINUTE_SEC)) if bursty else MIN_EPISODE_SEC
     ivs = merge_windows(wdf, pad_to, recording_sec, min_ep) if len(wdf) else []
     ivs = split_on_gaps(ivs, wdf, pad_to) if ivs else ivs
     return Timeline(intervals=ivs, recording_sec=recording_sec, hz=HZ,
