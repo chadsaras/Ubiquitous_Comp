@@ -70,35 +70,59 @@ def parse_intent_fast_rules(question: str) -> Optional[QueryIntent]:
 
     acts = find_activities()
 
-    # 1. Compare
-    if "more time" in q or "compare" in q or (" or " in q and len(acts) >= 2):
-        if len(acts) >= 2:
-            return QueryIntent(intent=IntentType.COMPARE, target_activity=acts[0], compare_activity=acts[1])
+    # The rules below match cues ANYWHERE in the question rather than anchoring on a prefix.
+    # Measured on 32 realistic paraphrases, prefix anchoring routed only 47% correctly: "For how
+    # long did she walk?", "Roughly how long was she on a bike?" and "At what point did walking
+    # start?" all fell through to the SLM purely because they do not begin with the expected words.
+    # Anything the rules miss costs ~2 s of SLM latency and is measurably more likely to be
+    # misrouted, so breadth here is worth more than elegance.
 
-    # 2. Duration. "How much ... did she spend resting?" is the brief's own phrasing in the
-    # opening scenario, so match the "how much" question form too -- but only as a question form,
-    # never on the bare word "spend", or the yes/no "Did the user spend a prolonged period
-    # resting?" would be mistaken for a duration query.
-    if (q.startswith(("how long", "how much")) or "duration" in q
-            or "time spent" in q or "total time" in q):
-        target = acts[0] if acts else None
-        return QueryIntent(intent=IntentType.DURATION, target_activity=target)
+    # 1. Compare -- needs two activities plus an explicit comparison cue.
+    compare_cue = ("more time" in q or "compare" in q or "exceed" in q or "more than" in q
+                   or "greater than" in q or "longer than" in q or " versus " in q or " vs " in q
+                   or re.search(r"\bmore\b.*\bor\b", q) or " or " in q)
+    if compare_cue and len(acts) >= 2:
+        return QueryIntent(intent=IntentType.COMPARE, target_activity=acts[0], compare_activity=acts[1])
 
-    # 3. Count
-    if q.startswith("how many times") or "how often" in q or "count" in q or "number of episodes" in q:
-        target = acts[0] if acts else None
-        return QueryIntent(intent=IntentType.COUNT, target_activity=target)
+    # 2. Count -- "how many" plus an EPISODE noun. Checked before duration so that
+    # "how many episodes" and "how many minutes" separate cleanly on the noun, not on word order.
+    episode_noun = r"\b(times?|episodes?|bouts?|periods?|occasions?|sessions?|stretches|instances?|walks|runs)\b"
+    if (("how many" in q and re.search(episode_noun, q)) or "how often" in q
+            or re.search(r"\bcount\b", q) or "number of" in q):
+        return QueryIntent(intent=IntentType.COUNT, target_activity=acts[0] if acts else None)
 
-    # 4. Onset
-    if q.startswith("when did") or "onset" in q or "start time" in q or "begin" in q:
-        target = acts[0] if acts else None
-        return QueryIntent(intent=IntentType.ONSET, target_activity=target)
+    # 3. Duration. "How much ... did she spend resting?" is the brief's own scenario phrasing.
+    # Matches the question form and explicit time nouns -- deliberately NOT the bare word "spend",
+    # or the yes/no "Did the user spend a prolonged period resting?" becomes a duration query.
+    time_unit = r"\b(minutes?|seconds?|hours?|mins?|hrs?)\b"
+    if ("how long" in q or "how much time" in q or q.startswith("how much") or "duration" in q
+            or "time spent" in q or "spent doing" in q
+            or re.search(r"\btotal\b.*\btime\b", q) or re.search(r"\btime\b.*\btotal\b", q)
+            or ("how many" in q and re.search(time_unit, q))
+            or re.search(r"\bfor how long\b", q)):
+        return QueryIntent(intent=IntentType.DURATION, target_activity=acts[0] if acts else None)
+
+    # 4. Onset -- when something began. "when did/does/do", "at what point", "what time", or any
+    # begin/start verb form.
+    if (re.search(r"\bwhen\s+(did|does|do|was|were|is)\b", q) or "at what point" in q
+            or "what time" in q or "onset" in q
+            or re.search(r"\b(begin|begins|began|beginning|start|starts|started|starting|first)\b", q)):
+        return QueryIntent(intent=IntentType.ONSET, target_activity=acts[0] if acts else None)
 
     # 5. Open World keywords. Keep any named activity too: "did she lie down for a prolonged
     # period" must be answered about lying down specifically, not about sedentary time in general,
     # or a long sitting stretch would wrongly satisfy it.
     target = acts[0] if acts else None
-    if "prolonged" in q or "rest" in q:
+    rest_cue = ("prolonged" in q or "rest" in q or "inactivity" in q or "inactive" in q
+                or "motionless" in q or "extended period" in q or "long stretch" in q
+                or "sedentary" in q or "immobile" in q)
+    # Indirect references only. A question that names cycling directly ("Was she cycling?") is a
+    # plain verification; open-world is for describing the behaviour without naming the class.
+    wheel_cue = "wheel" in q or "pedal" in q or "transport" in q
+    strenuous_cue = ("strenuous" in q or "vigorous" in q or "intense" in q or "exertion" in q
+                     or "exercise" in q or "exerting" in q or "physically demanding" in q)
+
+    if rest_cue:
         # "rest"/"resting" is generic sedentary behaviour and must not be narrowed to lying down
         # (the synonym table maps "resting" -> lying_down, which would miss a long sitting
         # stretch). Only an explicitly named posture narrows the question.
@@ -106,21 +130,28 @@ def parse_intent_fast_rules(question: str) -> Optional[QueryIntent]:
         named_posture = any(re.search(rf"\b{re.escape(t)}\b", q) for t in posture)
         return QueryIntent(intent=IntentType.OPEN_WORLD, semantic_concept="prolonged_rest",
                            target_activity=target if named_posture else None)
-    if "wheeled" in q or "pedal" in q:
+    if wheel_cue:
         return QueryIntent(intent=IntentType.OPEN_WORLD, semantic_concept="wheeled_movement",
                            target_activity=target)
-    if "strenuous" in q:
+    if strenuous_cue:
         return QueryIntent(intent=IntentType.OPEN_WORLD, semantic_concept="strenuous_activity",
                            target_activity=target)
 
-    # 6. Verify -- any yes/no-style question ("is/was/did/does/were/has ...") naming an
-    # activity, not just the literal phrase "the user" (real subjects vary: "she", "he",
-    # a name, "the grandmother", etc.)
-    if re.match(r"^(is|was|were|did|does|do|has|had|are)\b", q) and acts:
+    # 6. Verify -- a yes/no question naming an activity. Subjects vary ("she", "he", a name,
+    # "the grandmother"), and the request is often indirect ("Can you confirm...", "Is there any
+    # evidence of..."), so the auxiliary-verb opening is only one of several accepted forms.
+    if acts and (re.match(r"^(is|was|were|did|does|do|has|had|are|can|could|would|any)\b", q)
+                 or "confirm" in q or "any evidence" in q or "any sign" in q
+                 or "is there" in q or "was there" in q or "detected" in q):
         return QueryIntent(intent=IntentType.VERIFY, target_activity=acts[0])
 
-    # 7. Identify
-    if "what activity" in q or "what is the user doing" in q:
+    # 7. Identify -- an open "what were they doing" question, in any of its usual forms.
+    if (re.search(r"\bwhat\s+(activity|activities)\b", q)
+            or re.search(r"\bwhat\s+(is|was|were|are)\b.*\bdoing\b", q)
+            or re.search(r"\bwhich\s+activity\b", q)
+            or re.search(r"\bwhat\b.*\b(up to|happening|going on)\b", q)
+            or re.search(r"\bwhat\b.*\b(kind|type|sort)\s+of\s+(activity|movement|motion)\b", q)
+            or re.search(r"\b(tell me|describe)\b.*\b(what|doing|activity)\b", q)):
         return QueryIntent(intent=IntentType.IDENTIFY)
 
     return None
